@@ -1,13 +1,14 @@
+#include "xrt_thread.h"
+
 extern TCB_t tcb2;
 extern TCB_t tcb1;
 __attribute__((naked))void xrt_store_context2(void);
 __attribute__((naked))void xrt_store_context2(void){
-	__asm("mrs r0,  PSP;"); //we already know we have tcb1 stack pointer.
+	__asm("mrs r0,  PSP;"); //we already know we have tcb2 stack pointer.
 	__asm("sub r0, r0, #32;");
 
 	__asm("ldr r1, =tcb2");
 	__asm("add r1, r1, #4");
-
 	__asm("str r0, [r1, #0]");
 
 	__asm("str r4,  [r0, #28];");
@@ -81,7 +82,7 @@ __attribute__((naked)) void PendSV_Handler(void)
     __asm("LDR     r10, [r1, #4]");
     __asm("LDR     r11, [r1, #0]");
 
-    __asm("ADD     r1, r1, #32");
+    __asm("ADD     r1, r1, #32"); //now it points to hardware stack frame
     __asm("MSR     PSP, r1");
 
     __asm("B       pendsv_exit");
@@ -114,4 +115,27 @@ __attribute__((naked)) void PendSV_Handler(void)
     /* ── exit ── */
     __asm("pendsv_exit:");
     __asm("BX      lr");
+}
+
+
+extern bool init_status_completed;
+/**
+  * @brief This function handles System tick timer.
+  */
+void SysTick_Handler(void)
+{
+  /* USER CODE BEGIN SysTick_IRQn 0 */
+
+  /* USER CODE END SysTick_IRQn 0 */
+  HAL_IncTick();
+  /* USER CODE BEGIN SysTick_IRQn 1 */
+  uint32_t tick_count = HAL_GetTick();
+  if(tick_count % 500 == 0){
+	  //create pendsv interrupt.
+	  if(init_status_completed){
+		  //create single pendSV request, Supervisor call
+		  SCB->ICSR = (1 << 28);
+	  }
+  }
+  /* USER CODE END SysTick_IRQn 1 */
 }
