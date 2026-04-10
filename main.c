@@ -1,3 +1,6 @@
+#include "xrt_thread.h"
+
+
 #define NUM_OF_THREAD_IN_SYSTEM (4)
 
 #define THREAD1_STACK_SIZE		64
@@ -14,6 +17,7 @@ uint32_t thread4_stack[THREAD4_STACK_SIZE];
 
 void t1_dummy_function(void);
 void t2_dummy_function(void);
+void t3_dummy_function(void);
 
 void t1_dummy_function(void){
 	int a = 5;
@@ -39,7 +43,7 @@ void t2_dummy_function(void){
 TCB_t tcb1 = {
         .fptr = t1_dummy_function,
         .thread_sp = thread1_stack + THREAD1_STACK_SIZE - 1,
-        .ThreadStackSize = THREAD1_STACK_SIZE,
+        .ThreadStackSize = THREAD1_STACK_SIZE * 4,
         .priority = LOW_PRIORITY,
         .state = THREAD_READY_STATE,
         .thread_id = "T1",
@@ -49,12 +53,45 @@ TCB_t tcb1 = {
 
 TCB_t tcb2 = {
         .fptr = t2_dummy_function,
-        .ThreadStackSize = THREAD2_STACK_SIZE,
+        .ThreadStackSize = THREAD2_STACK_SIZE * 4,
         .priority = HIGH_PRIORITY,
         .state = THREAD_READY_STATE,
         .thread_id = "T2",
         .thread_base_ptr = thread2_stack,
         .thread_sp = thread2_stack + THREAD2_STACK_SIZE - 1,
+};
+
+TCB_t tcb3 = {
+        .fptr = t3_dummy_function,
+        .ThreadStackSize = THREAD3_STACK_SIZE,
+        .priority = HIGH_PRIORITY,
+        .state = THREAD_READY_STATE,
+        .thread_id = "T3",
+        .thread_base_ptr = thread3_stack,
+        .thread_sp = thread3_stack + THREAD3_STACK_SIZE - 1,
+};
+
+cdll_node thread1_node = {
+		.data = &tcb1,
+		.next = NULL,
+		.prev = NULL,
+};
+
+cdll_node thread2_node = {
+		.data = &tcb2,
+		.next = NULL,
+		.prev = NULL,
+};
+
+cdll_node thread3_node = {
+		.data = &tcb3,
+		.next = NULL,
+		.prev = NULL,
+};
+
+TCB_List_t xrtKernelList = {
+							.head = NULL,
+							.size = 0,
 };
 
 __STATIC_FORCEINLINE void xrt_thread_start();
@@ -67,90 +104,7 @@ __STATIC_FORCEINLINE void xrt_thread_start(){
 
 }
 
-// it is written only
-__attribute__((naked))void xrt_thread_init(void);
-__attribute__((naked))void xrt_thread_init(void){
-	__asm("push {r7, lr}");
 
-	__asm("ldr r7, =thread2_stack");
-	__asm("add.w r7, 252"); // (64 - 1)* 4, 64 length of array
-
-	__asm("add r0, r7, #0");
-
-	__asm("ldr r1, =0x01000000");	//@note: xPSR value I saw this kind of usage for thread_1;
-	__asm("str r1, [r0, #0]");
-
-	__asm("ldr r1, =t2_dummy_function");
-	__asm("sub r0, #4");		  // now, I need to assign t2_dummy_function address to stack area.
-	__asm("str  r1, [r0, #0]");   // it means that when exception returned, this value will be PC.
-
-	__asm("ldr r1, =0xFFFFFFFD"); // may be LR value, I don't determine the exact value.
-	__asm("sub r0, #4"); 			// I'm not sure which LR value will be written
-	__asm("str  r1, [r0, #0]");
-
-	__asm("mov r1, 0");	//r12
-	__asm("sub r0, #4");
-	__asm("str  r1, [r0, #0]");
-
-	__asm("mov r1, 0");//r3
-	__asm("sub r0, #4");
-	__asm("str  r1, [r0, #0]");
-
-	__asm("mov r1, 0");//r2
-	__asm("sub r0, #4");
-	__asm("str  r1, [r0, #0]");
-
-	__asm("mov r1, 0");//r1
-	__asm("sub r0, #4");
-	__asm("str  r1, [r0, #0]");
-
-	__asm("mov r1, 0");
-	__asm("sub r0, #4");
-	__asm("str  r1, [r0, #0]");//r0
-
-	__asm("mov r1, 0");
-	__asm("sub r0, #4");
-	__asm("str  r1, [r0, #0]");//r4
-
-	__asm("mov r1, 0");
-	__asm("sub r0, #4");
-	__asm("str  r1, [r0, #0]");//r5
-
-	__asm("mov r1, 0");
-	__asm("sub r0, #4");
-	__asm("str  r1, [r0, #0]");//r6
-
-//	__asm("mov r1, 0");
-	__asm("ldr r1, [r0, #0]");
-	__asm("sub r0, #4");
-	__asm("str  r1, [r0, #0]");//r7
-
-	__asm("mov r1, 0");
-	__asm("sub r0, #4");
-	__asm("str  r1, [r0, #0]");//r8
-
-	__asm("mov r1, 0");
-	__asm("sub r0, #4");
-	__asm("str  r1, [r0, #0]");//r9
-
-	__asm("mov r1, 0");
-	__asm("sub r0, #4");
-	__asm("str  r1, [r0, #0]");//r10
-
-	__asm("mov r1, 0");
-	__asm("sub r0, #4");
-	__asm("str  r1, [r0, #0]");//r11
-
-	__asm("ldr r7, =tcb2;"
-		  "add r7, r7, #4");
-
-	__asm("str r0, [r7, #0]"); /*TODO: fix this  dynamic assignment, but we update the stack pointer*/
-
-	__asm("pop {r7, lr}");
-
-	__asm("bx lr");
-
-}
 /* USER CODE END 0 */
 
 /**
@@ -200,12 +154,16 @@ int main(void)
 	  thread2_stack[i] = 11;
   }
 
-  xrt_thread_init();
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   /* USER CODE BEGIN 2 */
-  xrt_thread_start();
+  	xrt_thread_list_init(&xrtKernelList);
+
+	xrt_thread_init(&xrtKernelList, &tcb1, &thread1_node);
+	xrt_thread_init(&xrtKernelList, &tcb2, &thread2_node);
+
+	xrt_thread_start();
   /* USER CODE END 2 */
 
   /* Infinite loop */
