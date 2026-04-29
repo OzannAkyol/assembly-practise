@@ -32,19 +32,8 @@ bool cdll_sort_list(cdll_list* list);
 
 /*
  * It is created for kernel functions, Since it affects the complexity
- */
-__STATIC_FORCEINLINE void cddl_remove_known_node_from_list(cdll_list* list, cdll_node* node){
-	node -> next -> prev = node -> prev;
-	node -> prev -> next = node -> next;
+ */ //__STATIC_FORCEINLINE void cdll_remove_known_node_from_list(cdll_list* list, cdll_node* node)
+void cdll_remove_known_node_from_list(cdll_list* list, cdll_node* node);
 
-	if(node == list -> head){
-		list -> head = node -> next;
-	}
-
-	node -> next = NULL;
-	node -> prev = NULL;
-	list -> size--;
-
-}
 
 #endif /* INC_XRT_LIST_H_ */
