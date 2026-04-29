@@ -37,4 +37,8 @@ typedef struct{
 
 bool xrt_thread_list_init(TCB_List_t* list);
 bool xrt_thread_init(TCB_List_t* list ,TCB_t* node, cdll_node* thread_node);
+void xrt_create_svcall();
+void xrt_thread_start();
+
+
 #endif /* INC_XRT_THREAD_H_ */

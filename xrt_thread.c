@@ -9,9 +9,57 @@
 #include <stdbool.h>
 
 #include "xrt_thread.h"
+#include "main.h"
+
+#define reserved_start_stack_size		64
+uint32_t reserved_start_stack[reserved_start_stack_size];
+
+void tcb_reserved_function();
+
+TCB_t tcb_reserved = {
+        .fptr = tcb_reserved_function,
+        .ThreadStackSize = reserved_start_stack_size,
+        .priority = HIGH_PRIORITY,
+        .state = THREAD_READY_STATE,
+        .thread_id = "Reserved",
+        .thread_base_ptr = reserved_start_stack,
+        .thread_sp = reserved_start_stack + reserved_start_stack_size - 1,
+};
 
 __attribute__((naked)) static void xrt_init_stack_frame(TCB_t* node);
 
+
+volatile bool is_os_kernel_started = false;
+volatile bool is_os_first_cs_occurs = false;
+
+void tcb_reserved_function(){
+	__disable_irq();
+	is_os_kernel_started = true;
+	is_os_first_cs_occurs = true;
+	__enable_irq();
+	while(1){
+
+	}
+}
+
+uint32_t x;
+
+void xrt_create_svcall(){
+	xrt_init_stack_frame(&tcb_reserved);
+	__set_CONTROL(0x2);
+	x = __get_CONTROL();
+	(void)x;
+
+	uint32_t value = (uint32_t)tcb_reserved.thread_sp;
+	__set_PSP(value);
+
+	tcb_reserved.fptr();
+
+}
+
+void xrt_thread_start(){
+	xrt_create_svcall();
+}
 
 bool xrt_thread_list_init(TCB_List_t* list){
 	if(list == NULL){
@@ -25,17 +73,12 @@ bool xrt_thread_list_init(TCB_List_t* list){
 	return true;
 }
 
-extern TCB_t tcb2;
 bool xrt_thread_init(TCB_List_t* list ,TCB_t* node, cdll_node* thread_node){
 	if(list == NULL || node == NULL){
 		return false;
 	}
 
-	//TODO: start threads from ISR
-	if(node == &tcb2){
-
-		xrt_init_stack_frame(node);
-	}
+	xrt_init_stack_frame(node);
 
 	return (cdll_insert_node_to_list(list, thread_node) == true);
 }
@@ -111,6 +154,7 @@ __attribute__((naked)) static void xrt_init_stack_frame(TCB_t* node){
 	__asm("mov r1, 0");			// r11
 	__asm("str r1, [r6, #0]");
 
+	__asm("add r6, 32"); //it point to thread's hw stack frame
 	__asm("str r6, [r7, #0]"); // now I guess, we have to update thread's stack pointer value(It should points the software stack frame).
 
 	__asm("pop {r7, lr}");
