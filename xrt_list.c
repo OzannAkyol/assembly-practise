@@ -12,6 +12,9 @@
 #include "xrt_list.h"
 #include "xrt_thread.h"
 
+__STATIC_FORCEINLINE void cdll_increment_list_size(cdll_list* list);
+__STATIC_FORCEINLINE void cdll_decrement_list_size(cdll_list* list);
+
 void cdll_remove_known_node_from_list(cdll_list* list, cdll_node* node){
 	if(list -> size == 1){
 		list -> size = 0;
@@ -29,7 +32,7 @@ void cdll_remove_known_node_from_list(cdll_list* list, cdll_node* node){
 
 		node -> next = NULL;
 		node -> prev = NULL;
-		list -> size--;
+		cdll_decrement_list_size(list);
 	}
 }
 
@@ -43,7 +46,7 @@ bool cdll_init_list(cdll_list* list){
 	return true;
 }
 
-bool cdll_insert_node_to_list(cdll_list* list, cdll_node* node){
+bool cdll_insert_node_to_tail(cdll_list* list, cdll_node* node){
 	if(list-> head == NULL){
 		list-> head = node;
 		node-> prev = node;
@@ -56,12 +59,45 @@ bool cdll_insert_node_to_list(cdll_list* list, cdll_node* node){
 		list->head->prev->next = node;
 		list->head->prev = node;
 	}
-	list->size++;
+	cdll_increment_list_size(list);
 
 	return true;
 }
 
-bool cddl_remove_node_from_list(cdll_list* list, cdll_node* node){
+bool cdll_insert_node_to_head(cdll_list* list, cdll_node* node){
+	if(list == NULL || node == NULL){
+		return false;
+	}
+
+	if(list ->size == 0){
+		node -> next = node;
+		node -> prev = node;
+
+	}
+	else{
+		node -> next = list -> head;
+		node -> prev = list -> head -> prev;
+
+		node -> prev -> next = node;
+		list -> head -> prev = node;
+
+	}
+
+	list->head = node;
+
+	cdll_increment_list_size(list);
+
+	return true;
+}
+
+cdll_node* cdll_get_list_head(cdll_list* list){
+	if(list != NULL && list->head != NULL){
+		return list->head;
+	}
+	return NULL;
+}
+
+bool cdll_remove_node_from_list(cdll_list* list, cdll_node* node){
 	if(list == NULL || node == NULL){
 		return false;
 	}
@@ -77,7 +113,9 @@ bool cddl_remove_node_from_list(cdll_list* list, cdll_node* node){
 	if(node == list -> head){
 		list->head = tmp -> next;
 		if(list->size == 1){
-			list->size--;
+
+			cdll_decrement_list_size(list);
+
 			list->head = NULL;
 			return true;
 		}
@@ -88,7 +126,7 @@ bool cddl_remove_node_from_list(cdll_list* list, cdll_node* node){
 
 	tmp->next = NULL;
 
-	list->size--;
+	cdll_decrement_list_size(list);
 
 
 	return true;
@@ -152,4 +190,77 @@ void cdll_traverse_list(cdll_list* list){
 		tmp = tmp -> next;
 	}
 
+}
+
+/*
+ *  @note: this function placed node according to it's priority order.
+ *
+ */
+bool cdll_push_data_with_priority_order(cdll_list* list, cdll_node* node){
+	if(list == NULL || list -> head == NULL|| node == NULL){
+		return false;
+	}
+
+	TCB_t* given_node = (TCB_t*)node->data;
+
+	cdll_node* tmp = list -> head;
+	TCB_t* tmp_thread = (TCB_t*) tmp -> data;
+
+
+	uint32_t size = list -> size;
+
+	while(size-- > 0){
+		if(tmp_thread -> priority > given_node -> priority){
+			tmp = tmp -> next;
+
+			if(tmp == list->head){
+				cdll_insert_node_to_tail(list, node);
+				break;
+			}
+
+			tmp_thread = (TCB_t*)tmp -> data;
+
+		}
+		else if(tmp_thread -> priority == given_node -> priority){
+			tmp = tmp -> next;
+
+			if(tmp == list->head){
+				cdll_insert_node_to_tail(list, node);
+				break;
+			}
+
+			tmp_thread = (TCB_t*)tmp -> data;
+
+
+			if(tmp_thread -> priority < given_node -> priority){
+				node -> next = tmp ;
+				node -> prev = tmp -> prev;
+
+				tmp -> prev -> next = node;
+				tmp -> prev = node;
+
+				cdll_increment_list_size(list);
+
+				break;
+			}
+		}
+		else {
+			cdll_insert_node_to_head(list, node);
+			break;
+		}
+	}
+
+	return true;
+}
+
+__STATIC_FORCEINLINE void cdll_increment_list_size(cdll_list* list){
+	if(list != NULL){
+		list->size++;
+	}
+}
+
+__STATIC_FORCEINLINE void cdll_decrement_list_size(cdll_list* list){
+	if(list != NULL){
+		list->size--;
+	}
 }

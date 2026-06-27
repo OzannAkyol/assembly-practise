@@ -21,7 +21,7 @@ TCB_t tcb_reserved = {
         .ThreadStackSize = reserved_start_stack_size,
         .priority = HIGH_PRIORITY,
         .state = THREAD_READY_STATE,
-        .thread_id = "Reserved",
+        .thread_id = THREAD_ID_RESERVED,
         .thread_base_ptr = reserved_start_stack,
         .thread_sp = reserved_start_stack + reserved_start_stack_size - 1,
 };
@@ -80,7 +80,16 @@ bool xrt_thread_init(TCB_List_t* list ,TCB_t* node, cdll_node* thread_node){
 
 	xrt_init_stack_frame(node);
 
-	return (cdll_insert_node_to_list(list, thread_node) == true);
+	return (cdll_insert_node_to_tail(list, thread_node) == true);
+}
+
+void xrt_thread_yield(void){
+	__asm("SVC #13");  // yield
+}
+
+void xrt_thread_delay(uint32_t ms){
+	register uint32_t r0 __asm("r0") = ms;
+	__asm volatile("SVC #12" : : "r"(r0));
 }
 
 __attribute__((naked)) static void xrt_init_stack_frame(TCB_t* node){

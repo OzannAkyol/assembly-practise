@@ -1,69 +1,15 @@
-/* USER CODE BEGIN Header */
-/**
-  **************************
-  * @file           : main.c
-  * @brief          : Main program body
-  **************************
-  * @attention
-  *
-  * Copyright (c) 2026 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  **************************
-  */
-/* USER CODE END Header */
-/* Includes ------------------------------------------------------------------*/
 #include "main.h"
-//#include "i2c.h"
-//#include "i2s.h"
-//#include "spi.h"
-//#include "usb_host.h"
 #include "gpio.h"
 
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
 #include <stdint.h>
 #include "cmsis_gcc.h"
 #include <stdbool.h>
 #include "xrt_thread.h"
 #include "xrt_list.h"
-/* USER CODE END Includes */
 
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
 
-/* USER CODE END PTD */
-
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
-
-/* USER CODE END PD */
-
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
-
-/* USER CODE END PM */
-
-/* Private variables ---------------------------------------------------------*/
-
-/* USER CODE BEGIN PV */
-
-/* USER CODE END PV */
-
-/* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 void MX_USB_HOST_Process(void);
-
-/* USER CODE BEGIN PFP */
-
-/* USER CODE END PFP */
-
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
 
 #define NUM_OF_THREAD_IN_SYSTEM (4)
 
@@ -79,9 +25,14 @@ uint32_t thread3_stack[THREAD3_STACK_SIZE];
 #define THREAD4_STACK_SIZE		64
 uint32_t thread4_stack[THREAD4_STACK_SIZE];
 
+#define THREAD5_STACK_SIZE		64
+uint32_t thread5_stack[THREAD5_STACK_SIZE];
+
 void t1_dummy_function(void);
 void t2_dummy_function(void);
 void t3_dummy_function(void);
+void t4_dummy_function(void);
+void t5_dummy_function(void);
 
 void t1_dummy_function(void){
 	int a = 5;
@@ -91,10 +42,13 @@ void t1_dummy_function(void){
 	(void)b;
 
 	while(1){
-		HAL_GPIO_WritePin(LD6_GPIO_Port, LD6_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_SET);
+
+		HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LD6_GPIO_Port, LD6_Pin, GPIO_PIN_RESET);
+		HAL_Delay(750);
+		xrt_thread_delay(10000);
 	}
 }
 
@@ -106,10 +60,12 @@ void t2_dummy_function(void){
 	(void)b;
 
 	while(1){
-		HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(LD6_GPIO_Port, LD6_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, GPIO_PIN_SET);
+
+		HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LD6_GPIO_Port, LD6_Pin, GPIO_PIN_RESET);
+
 	}
 }
 
@@ -121,10 +77,11 @@ void t3_dummy_function(void){
 	(void)b;
 
 	while(1){
+		HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, GPIO_PIN_SET);
+
 		HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(LD6_GPIO_Port, LD6_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(LD6_GPIO_Port, LD6_Pin, GPIO_PIN_RESET);
 	}
 }
 
@@ -136,11 +93,23 @@ void t4_dummy_function(void){
 	(void)b;
 
 	while(1){
+		HAL_GPIO_WritePin(LD6_GPIO_Port, LD6_Pin, GPIO_PIN_SET);
+
 		HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(LD6_GPIO_Port, LD6_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, GPIO_PIN_RESET);
+	}
+}
 
+void t5_dummy_function(void){
+	int a = 5;
+	int b = 20;
+
+	(void)a;
+	(void)b;
+
+	while(1){
+//		HAL_GPIO_WritePin(LED_TEST_GPIO_Port, LED_TEST_Pin, GPIO_PIN_RESET);
 	}
 }
 
@@ -150,38 +119,58 @@ TCB_t tcb1 = {
         .ThreadStackSize = THREAD1_STACK_SIZE,
         .priority = HIGH_PRIORITY,
         .state = THREAD_READY_STATE,
-        .thread_id = "T1",
+        .thread_id = THREAD_ID_1,
         .thread_base_ptr = thread1_stack,
+		.wake_tick = 0,
+		.blocked_reason = XRT_BLOCK_NONE,
 };
 
 TCB_t tcb2 = {
         .fptr = t2_dummy_function,
         .ThreadStackSize = THREAD2_STACK_SIZE,
-        .priority = HIGH_PRIORITY,
+        .priority = MEDIUM_PRIORITY,
         .state = THREAD_READY_STATE,
-        .thread_id = "T2",
+        .thread_id = THREAD_ID_2,
         .thread_base_ptr = thread2_stack,
         .thread_sp = thread2_stack + THREAD2_STACK_SIZE - 1,
+		.wake_tick = 0,
+		.blocked_reason = XRT_BLOCK_NONE,
 };
 
 TCB_t tcb3 = {
         .fptr = t3_dummy_function,
         .ThreadStackSize = THREAD3_STACK_SIZE,
-        .priority = HIGH_PRIORITY,
+        .priority = MEDIUM_PRIORITY,
         .state = THREAD_READY_STATE,
-        .thread_id = "T3",
+        .thread_id = THREAD_ID_3,
         .thread_base_ptr = thread3_stack,
         .thread_sp = thread3_stack + THREAD3_STACK_SIZE - 1,
+		.wake_tick = 0,
+		.blocked_reason = XRT_BLOCK_NONE,
 };
 
 TCB_t tcb4 = {
         .fptr = t4_dummy_function,
         .ThreadStackSize = THREAD4_STACK_SIZE,
-        .priority = HIGH_PRIORITY,
+        .priority = MEDIUM_PRIORITY,
         .state = THREAD_READY_STATE,
-        .thread_id = "T4",
+        .thread_id = THREAD_ID_4,
         .thread_base_ptr = thread4_stack,
         .thread_sp = thread4_stack + THREAD4_STACK_SIZE - 1,
+		.wake_tick = 0,
+		.blocked_reason = XRT_BLOCK_NONE,
+};
+
+TCB_t tcb5 = {
+        .fptr = t5_dummy_function,
+        .ThreadStackSize = THREAD5_STACK_SIZE,
+        .priority = LOW_PRIORITY,
+        .state = THREAD_READY_STATE,
+        .thread_id = THREAD_ID_5,
+        .thread_base_ptr = thread5_stack,
+        .thread_sp = thread5_stack + THREAD5_STACK_SIZE - 1,
+		.wake_tick = 0,
+		.blocked_reason = XRT_BLOCK_NONE,
 };
 
 
@@ -210,6 +199,12 @@ cdll_node thread4_node ={
 	.next = NULL,
 };
 
+cdll_node thread5_node ={
+	.data = &tcb5,
+	.prev = NULL,
+	.next = NULL,
+};
+
 TCB_List_t xrtKernelReadyList={
 		.head = NULL,
 		.size = 0,
@@ -225,78 +220,42 @@ TCB_List_t xrtKernelStoppedList ={
 		.size = 0,
 };
 
-
-/* USER CODE END 0 */
-
-/**
-  * @brief  The application entry point.
-  * @retval int
-  */
 int main(void)
 {
 
-  /* USER CODE BEGIN 1 */
 //  __disable_irq();
-	  FPU->FPCCR &= ~(FPU_FPCCR_LSPEN_Msk | FPU_FPCCR_ASPEN_Msk);
-  /* USER CODE END 1 */
+  FPU->FPCCR &= ~(FPU_FPCCR_LSPEN_Msk | FPU_FPCCR_ASPEN_Msk);
 
-  /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
   SystemClock_Config();
 
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
-
-  /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  /* USER CODE BEGIN 2 */
-  //change the MSP to PSP
+
   for(int i = 0; i < THREAD2_STACK_SIZE; ++i){
 	  thread1_stack[i] = 11;
 	  thread2_stack[i] = 11;
 	  thread3_stack[i] = 11;
 	  thread4_stack[i] = 11;
+	  thread5_stack[i] = 11;
   }
 
-  /* USER CODE END SysInit */
-
-  /* Initialize all configured peripherals */
-  /* USER CODE BEGIN 2 */
   xrt_thread_list_init(&xrtKernelRunningList);
-  xrt_thread_list_init(&xrtKernelStoppedList);
-
-  xrt_thread_init(&xrtKernelRunningList, &tcb1, &thread1_node);
+//  xrt_thread_list_init(&xrtKernelStoppedList);
 
   xrt_thread_list_init(&xrtKernelReadyList);
+  xrt_thread_init(&xrtKernelReadyList, &tcb1, &thread1_node);
   xrt_thread_init(&xrtKernelReadyList, &tcb2, &thread2_node);
   xrt_thread_init(&xrtKernelReadyList, &tcb3, &thread3_node);
   xrt_thread_init(&xrtKernelReadyList, &tcb4, &thread4_node);
-//  cdll_sort_list(&xrtKernelReadyList);
+  xrt_thread_init(&xrtKernelReadyList, &tcb5, &thread5_node);
+
   xrt_thread_start();
 
-//  SCB -> SHCSR |= SCB_SHCSR_SVCALLPENDED_Msk;
-  /* USER CODE END 2 */
-
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
   while(1)
   {
 
-    /* USER CODE END WHILE */
-    // MX_USB_HOST_Process();
-
-    /* USER CODE BEGIN 3 */
   }
-  /* USER CODE END 3 */
 }
 
 /**
