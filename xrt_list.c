@@ -84,7 +84,6 @@ bool cdll_insert_node_to_head(cdll_list* list, cdll_node* node){
 	}
 
 	list->head = node;
-
 	cdll_increment_list_size(list);
 
 	return true;
@@ -153,7 +152,7 @@ bool cdll_sort_list(cdll_list* list) {
             TCB_t* current_node_tcb = (TCB_t*)current_node->data;
             TCB_t* next_node_tcb    = (TCB_t*)next_node->data;
 
-            if (current_node_tcb->priority <= next_node_tcb->priority) {
+            if (current_node_tcb->currentPriority <= next_node_tcb->currentPriority) {
                 cdll_node* dummy_next = next_node->next;
 
                 current_node->next       = next_node->next;
@@ -197,8 +196,14 @@ void cdll_traverse_list(cdll_list* list){
  *
  */
 bool cdll_push_data_with_priority_order(cdll_list* list, cdll_node* node){
-	if(list == NULL || list -> head == NULL|| node == NULL){
+	if(list == NULL || node == NULL){
 		return false;
+	}
+
+	if(list -> head == NULL){
+		list -> head = node;
+		cdll_increment_list_size(list);
+		return true;
 	}
 
 	TCB_t* given_node = (TCB_t*)node->data;
@@ -210,7 +215,7 @@ bool cdll_push_data_with_priority_order(cdll_list* list, cdll_node* node){
 	uint32_t size = list -> size;
 
 	while(size-- > 0){
-		if(tmp_thread -> priority > given_node -> priority){
+		if(tmp_thread -> currentPriority > given_node -> currentPriority){
 			tmp = tmp -> next;
 
 			if(tmp == list->head){
@@ -221,7 +226,7 @@ bool cdll_push_data_with_priority_order(cdll_list* list, cdll_node* node){
 			tmp_thread = (TCB_t*)tmp -> data;
 
 		}
-		else if(tmp_thread -> priority == given_node -> priority){
+		else if(tmp_thread -> currentPriority == given_node -> currentPriority){
 			tmp = tmp -> next;
 
 			if(tmp == list->head){
@@ -232,7 +237,7 @@ bool cdll_push_data_with_priority_order(cdll_list* list, cdll_node* node){
 			tmp_thread = (TCB_t*)tmp -> data;
 
 
-			if(tmp_thread -> priority < given_node -> priority){
+			if(tmp_thread -> currentPriority < given_node -> currentPriority){
 				node -> next = tmp ;
 				node -> prev = tmp -> prev;
 

@@ -46,13 +46,15 @@ typedef enum{
 typedef struct{
 	ThreadId_t thread_id;
 	uint32_t* thread_sp;
-	Priority_t priority;
+	Priority_t base_priority;
 	ThreadState_t state;
 	uint32_t* thread_base_ptr;
 	uint32_t ThreadStackSize;
 	void (*fptr)(void); 	// fp to thread execution function.
 	uint32_t wake_tick;
 	ThreadBlockedReason_t blocked_reason;
+	TCB_List_t* currently_located_list;
+	Priority_t currentPriority;
 }TCB_t;
 
 bool xrt_thread_list_init(TCB_List_t* list);

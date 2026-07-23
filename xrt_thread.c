@@ -19,11 +19,11 @@ void tcb_reserved_function();
 TCB_t tcb_reserved = {
         .fptr = tcb_reserved_function,
         .ThreadStackSize = reserved_start_stack_size,
-        .priority = HIGH_PRIORITY,
+        .base_priority = HIGH_PRIORITY,
         .state = THREAD_READY_STATE,
         .thread_id = THREAD_ID_RESERVED,
         .thread_base_ptr = reserved_start_stack,
-        .thread_sp = reserved_start_stack + reserved_start_stack_size - 1,
+        .thread_sp = reserved_start_stack + reserved_start_stack_size - 1
 };
 
 __attribute__((naked)) static void xrt_init_stack_frame(TCB_t* node);
@@ -79,8 +79,9 @@ bool xrt_thread_init(TCB_List_t* list ,TCB_t* node, cdll_node* thread_node){
 	}
 
 	xrt_init_stack_frame(node);
-
-	return (cdll_insert_node_to_tail(list, thread_node) == true);
+	cdll_insert_node_to_tail(list, thread_node);
+	node -> currently_located_list = list;
+	return true;
 }
 
 void xrt_thread_yield(void){

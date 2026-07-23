@@ -8,7 +8,8 @@
 #ifndef INC_XRT_LIST_H_
 #define INC_XRT_LIST_H_
 
-#include "stdbool.h"
+#include <stdint.h>
+#include <stdbool.h>
 #include "cmsis_gcc.h"
 
 typedef struct cdll_node_t cdll_node;
