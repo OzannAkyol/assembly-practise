@@ -252,6 +252,10 @@ void SVC_Handler(void)
 					mutex_ptr -> mutexOwner = running_thread;
 				}
 				else{
+					if(mutex_ptr -> mutexOwner == running_thread){
+						break;
+					}
+
 					if(running_thread -> currentPriority > mutex_ptr -> mutexOwner -> currentPriority){
 						mutex_ptr -> mutexOwner -> currentPriority = running_thread -> currentPriority;
 						//find the where owner located.
@@ -407,6 +411,9 @@ void xrt_change_context_list(void){
 	TCB_t* currently_running_thread = (TCB_t*)currently_running -> data;
 
 	cdll_node* currently_ready_node = xrtKernelReadyList.head;
+	if(currently_ready_node == NULL){
+		return;
+	}
 	TCB_t* currently_ready_thread = (TCB_t*)currently_ready_node -> data;
 
 	if(currently_running_thread -> state == THREAD_BLOCKED_STATE){
