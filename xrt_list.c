@@ -19,8 +19,6 @@ void cdll_remove_known_node_from_list(cdll_list* list, cdll_node* node){
 	if(list -> size == 1){
 		list -> size = 0;
 		list -> head = NULL;
-		node -> next = NULL;
-		node -> prev = NULL;
 	}
 	else{
 		node -> next -> prev = node -> prev;
@@ -30,8 +28,8 @@ void cdll_remove_known_node_from_list(cdll_list* list, cdll_node* node){
 			list -> head = node -> next;
 		}
 
-		node -> next = NULL;
-		node -> prev = NULL;
+		node -> next = node;
+		node -> prev = node;
 		cdll_decrement_list_size(list);
 	}
 }
@@ -123,7 +121,8 @@ bool cdll_remove_node_from_list(cdll_list* list, cdll_node* node){
 	tmp -> next -> prev = tmp -> prev;
 	tmp -> prev -> next = tmp ->next;
 
-	tmp->next = NULL;
+	tmp->next = tmp;
+	tmp->prev = tmp;
 
 	cdll_decrement_list_size(list);
 
@@ -202,6 +201,8 @@ bool cdll_push_data_with_priority_order(cdll_list* list, cdll_node* node){
 
 	if(list -> head == NULL){
 		list -> head = node;
+		list -> head -> prev = node;
+		list -> head -> next = node;
 		cdll_increment_list_size(list);
 		return true;
 	}
