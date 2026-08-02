@@ -56,7 +56,11 @@ void xrt_create_svcall(){
 	tcb_reserved.fptr();
 
 }
-
+void xrt_set_os_priority_order(void){
+	NVIC_SetPriority(SVCall_IRQn, 15);
+	NVIC_SetPriority(PendSV_IRQn, 15);
+	NVIC_SetPriority(SysTick_IRQn, 14);
+}
 void xrt_thread_start(){
 	xrt_create_svcall();
 }
@@ -79,7 +83,7 @@ bool xrt_thread_init(TCB_List_t* list ,TCB_t* node, cdll_node* thread_node){
 	}
 
 	xrt_init_stack_frame(node);
-	cdll_insert_node_to_tail(list, thread_node);
+	cdll_push_data_with_priority_order(list, thread_node);
 	node -> currently_located_list = list;
 	return true;
 }
