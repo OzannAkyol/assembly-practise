@@ -274,6 +274,8 @@ int main(void)
   xrt_semaphore_init(&semaphore1, semaphore1.semaphore_value, semaphore1.semaphore_max_value);
   xrt_mutex_init(&mutex1);
 
+  xrt_set_os_priority_order();
+
   xrt_thread_start();
 
   while(1)
