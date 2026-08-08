@@ -97,80 +97,28 @@ void xrt_thread_delay(uint32_t ms){
 	__asm volatile("SVC #12" : : "r"(r0));
 }
 
-__attribute__((naked)) static void xrt_init_stack_frame(TCB_t* node){
-	__asm("push {r7, lr}");
+static void xrt_thread_stack_init(TCB_t* node){
+    uint32_t* sp = node->thread_sp;
 
-	__asm("add r7, r0, #0");
-	__asm("add r7 , r7 , #4"); 	// get related thread's stack pointer.
+    // HW Stack Frame
+    *(--sp) = 0x01000000;            // xPSR
+    *(--sp) = (uint32_t)node->fptr;  // PC (Thread running function)
+    *(--sp) = 0xFFFFFFFD;            // LR (EXC_RETURN value, FPU not used for now)
+    *(--sp) = 0;                     // R12
+    *(--sp) = 0;                     // R3
+    *(--sp) = 0;                     // R2
+    *(--sp) = 0;                     // R1
+    *(--sp) = 0;                     // R0
 
-	__asm("ldr r6, [r7, #0]"); // now r5 points the start address of thread stack frame.
+    node -> thread_sp = sp;          // tcb stack pointer must show the hardware sp base(R0).
 
-	__asm("ldr r1, =0x01000000"); // assign xPSR value.
-	__asm("str r1, [r6, #0]");
-	__asm("sub r6, #4");
-
-	__asm("ldr r1, [r7, #16]"); // take the thread's function.
-	__asm("str r1, [r6, #0]");	// assign it as a PC value.
-	__asm("sub r6, #4");
-
-	__asm("ldr r1, =0xfffffffd"); // LR value, for now, none of them use floating-point unit
-	__asm("str r1, [r6, #0]");
-	__asm("sub r6, #4");
-
-	__asm("mov r1, 0");			// r12
-	__asm("str r1, [r6, #0]");
-	__asm("sub r6, #4");
-
-	__asm("mov r1, 0");			// r0
-	__asm("str r1, [r6, #0]");
-	__asm("sub r6, #4");
-
-	__asm("mov r1, 0");			// r1
-	__asm("str r1, [r6, #0]");
-	__asm("sub r6, #4");
-
-	__asm("mov r1, 0");			// r2
-	__asm("str r1, [r6, #0]");
-	__asm("sub r6, #4");
-
-	__asm("mov r1, 0");			// r3
-	__asm("str r1, [r6, #0]");
-	__asm("sub r6, #4");
-
-	__asm("mov r1, 0");			// r4
-	__asm("str r1, [r6, #0]");
-	__asm("sub r6, #4");
-
-	__asm("mov r1, 0");			// r5
-	__asm("str r1, [r6, #0]");
-	__asm("sub r6, #4");
-
-	__asm("mov r1, 0");			// r6
-	__asm("str r1, [r6, #0]");
-	__asm("sub r6, #4");
-
-	__asm("mov r1, 0");			// r7
-	__asm("str r1, [r6, #0]");
-	__asm("sub r6, #4");
-
-	__asm("mov r1, 0");			// r8
-	__asm("str r1, [r6, #0]");
-	__asm("sub r6, #4");
-
-	__asm("mov r1, 0");			// r9
-	__asm("str r1, [r6, #0]");
-	__asm("sub r6, #4");
-
-	__asm("mov r1, 0");			// r10
-	__asm("str r1, [r6, #0]");
-	__asm("sub r6, #4");
-
-	__asm("mov r1, 0");			// r11
-	__asm("str r1, [r6, #0]");
-
-	__asm("add r6, 32"); //it point to thread's hw stack frame
-	__asm("str r6, [r7, #0]"); // now I guess, we have to update thread's stack pointer value(It should points the software stack frame).
-
-	__asm("pop {r7, lr}");
-	__asm("bx lr");
+    // SW Stack Frame
+    *(--sp) = 0;                     // R4
+    *(--sp) = 0;                     // R5
+    *(--sp) = 0;                     // R6
+    *(--sp) = 0;                     // R7
+    *(--sp) = 0;                     // R8
+    *(--sp) = 0;                     // R9
+    *(--sp) = 0;                     // R10
+    *(--sp) = 0;                     // R11
 }
