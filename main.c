@@ -262,8 +262,7 @@ int main(void)
   }
 
   xrt_thread_list_init(&xrtKernelRunningList);
-//  xrt_thread_list_init(&xrtKernelStoppedList);
-
+  xrt_thread_list_init(&xrtKernelStoppedList);
   xrt_thread_list_init(&xrtKernelReadyList);
   xrt_thread_init(&xrtKernelReadyList, &tcb1, &thread1_node);
   xrt_thread_init(&xrtKernelReadyList, &tcb2, &thread2_node);
