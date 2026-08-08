@@ -363,65 +363,6 @@ void DebugMon_Handler(void)
   /* USER CODE END DebugMonitor_IRQn 1 */
 }
 
-__attribute__((naked))void xrt_thread_store_context(void){
-	__asm("push {r7, lr}");
-	__asm("mrs r0,  PSP;");
-	__asm("ldr r1, =xrtKernelRunningList");
-	__asm("ldr r2, [r1, #0]"); // r2 points the head node
-	__asm("ldr r3, [r2, #0]"); // r3 points the head node->data
-	__asm("add r3, r3, #4");   // r3 points the head node->data + 4 = related threads stack pointer address pointer
-
-	__asm("str r0, [r3, #0]");	// store the currently using stack pointer to tcb->sp.
-
-	__asm("str r4,  [r0, #-4];");
-	__asm("str r5,  [r0, #-8];");
-	__asm("str r6,  [r0, #-12];");
-	__asm("str r7,  [r0, #-16];");// store related thread's frame pointer(stack pointer).
-	__asm("str r8,  [r0, #-20];");
-	__asm("str r9,  [r0, #-24];");
-	__asm("str r10, [r0, #-28];");
-	__asm("str r11, [r0, #-32];");
-
-	__asm("pop {r7, lr}");
-	__asm("bx lr;");
-}
-
-__attribute__((naked))void xrt_load_context(void){
-	__asm("push {lr}");
-	__asm("ldr r0, =xrtKernelRunningList");
-	__asm("ldr r0, [r0, #0]"); // load the address value of head node's
-	__asm("ldr r0, [r0, #0]");  // take the node's tcb address.
-
-	__asm("add r0, #4");		// move the thread's stack pointer area.
-	__asm("ldr r0, [r0, #0]");	// take the thread's stack pointer value.
-
-	__asm("ldr r4, [r0, #-4]");
-	__asm("ldr r5, [r0, #-8]");
-	__asm("ldr r6, [r0, #-12]");
-	__asm("ldr r7, [r0, #-16]");
-	__asm("ldr r8, [r0, #-20]");
-	__asm("ldr r9, [r0, #-24]");
-	__asm("ldr r10,[r0, #-28]");
-	__asm("ldr r11, [r0, #-32];");
-
-	__asm("msr PSP, r0");	//set psp to thread's hardware stack pointer.
-	__asm("pop {lr}");
-	__asm("bx lr");
-
-}
-
-
-void xrt_first_time_store_contex(void){
-	cdll_node* thread_node = xrtKernelReadyList.head;
-	TCB_t* xrt_thread = (TCB_t*)thread_node->data;
-	cdll_remove_known_node_from_list(&xrtKernelReadyList, thread_node);
-
-	cdll_insert_node_to_head(&xrtKernelRunningList, thread_node);
-	xrt_thread -> currently_located_list = &xrtKernelRunningList;
-
-	__set_PSP((uint32_t)xrt_thread->thread_sp);
-}
-
 void xrt_change_context_list(void){
 	cdll_node* currently_running = xrtKernelRunningList.head;
 	TCB_t* currently_running_thread = (TCB_t*)currently_running -> data;
@@ -510,6 +451,49 @@ void xrt_change_context_list(void){
 	}
 }
 
+__attribute__((naked))void xrt_thread_store_context(void){
+	__asm("mrs r0,  PSP;");
+	__asm("ldr r1, =xrtKernelRunningList");
+	__asm("ldr r2, [r1, #0]"); // r2 points the head node
+	__asm("ldr r3, [r2, #0]"); // r3 points the head node->data
+	__asm("add r3, r3, #4");   // r3 points the head node->data + 4 = related threads stack pointer address pointer
+
+	__asm("str r0, [r3, #0]");	// store the currently using stack pointer to tcb->sp.
+
+	__asm("str r4,  [r0, #-4];");
+	__asm("str r5,  [r0, #-8];");
+	__asm("str r6,  [r0, #-12];");
+	__asm("str r7,  [r0, #-16];");// store related thread's frame pointer(stack pointer).
+	__asm("str r8,  [r0, #-20];");
+	__asm("str r9,  [r0, #-24];");
+	__asm("str r10, [r0, #-28];");
+	__asm("str r11, [r0, #-32];");
+
+	__asm("bx lr;");
+}
+
+__attribute__((naked))void xrt_load_context(void){
+	__asm("ldr r0, =xrtKernelRunningList");
+	__asm("ldr r0, [r0, #0]"); // load the address value of head node's
+	__asm("ldr r0, [r0, #0]");  // take the node's tcb address.
+
+	__asm("add r0, #4");		// move the thread's stack pointer area.
+	__asm("ldr r0, [r0, #0]");	// take the thread's stack pointer value.
+
+	__asm("ldr r4, [r0, #-4]");
+	__asm("ldr r5, [r0, #-8]");
+	__asm("ldr r6, [r0, #-12]");
+	__asm("ldr r7, [r0, #-16]");
+	__asm("ldr r8, [r0, #-20]");
+	__asm("ldr r9, [r0, #-24]");
+	__asm("ldr r10,[r0, #-28]");
+	__asm("ldr r11, [r0, #-32];");
+
+	__asm("msr PSP, r0");	//set psp to thread's hardware stack pointer.
+	__asm("bx lr");
+
+}
+
 /*
  *@note It must be naked since the inside handler.
  *		GCC push the r7, it assigns sp to r7, and sp shows the handler's stack frame.
@@ -563,7 +547,7 @@ void SysTick_Handler(void)
   uint32_t tick_count = HAL_GetTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
   if(is_os_kernel_started){
-	  if(tick_count % 1000  == 0){
+	  if(tick_count % 250  == 0){
 		  SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
 	  }
 
