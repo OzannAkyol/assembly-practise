@@ -15,19 +15,19 @@ void MX_USB_HOST_Process(void);
 #define NUM_OF_THREAD_IN_SYSTEM (4)
 
 #define THREAD1_STACK_SIZE		64
-uint32_t thread1_stack[THREAD1_STACK_SIZE];
+__attribute__((aligned(8)))uint32_t thread1_stack[THREAD1_STACK_SIZE];
 
 #define THREAD2_STACK_SIZE		64
-uint32_t thread2_stack[THREAD2_STACK_SIZE];
+__attribute__((aligned(8)))uint32_t thread2_stack[THREAD2_STACK_SIZE];
 
 #define THREAD3_STACK_SIZE		64
-uint32_t thread3_stack[THREAD3_STACK_SIZE];
+__attribute__((aligned(8)))uint32_t thread3_stack[THREAD3_STACK_SIZE];
 
 #define THREAD4_STACK_SIZE		64
-uint32_t thread4_stack[THREAD4_STACK_SIZE];
+__attribute__((aligned(8)))uint32_t thread4_stack[THREAD4_STACK_SIZE];
 
 #define THREAD5_STACK_SIZE		64
-uint32_t thread5_stack[THREAD5_STACK_SIZE];
+__attribute__((aligned(8)))uint32_t thread5_stack[THREAD5_STACK_SIZE];
 
 void t1_dummy_function(void);
 void t2_dummy_function(void);
