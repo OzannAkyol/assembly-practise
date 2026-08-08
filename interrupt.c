@@ -58,7 +58,7 @@ volatile bool flag = true;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN PFP */
-void xrt_first_time_store_contex(void);
+__attribute__((naked))void xrt_first_time_store_contex(void);
 void xrt_change_context_list(void);
 __attribute__((naked))void xrt_thread_store_context(void);
 __attribute__((naked))void xrt_load_context(void);
@@ -327,6 +327,22 @@ void SVC_Handler(void)
 				break;
 		}
 	}
+	else{
+	//TODO: it is written for dummy os start need to try best way.
+			is_os_first_cs_occurs = true;
+			is_os_kernel_started = true;
+
+			cdll_node* ready_node = cdll_get_list_head(&xrtKernelReadyList);
+			TCB_t* ready_thread = (TCB_t*)ready_node -> data;
+
+			cdll_remove_known_node_from_list(&xrtKernelReadyList, ready_node);
+
+			cdll_push_data_with_priority_order(&xrtKernelRunningList, ready_node);
+			ready_thread -> currently_located_list = &xrtKernelRunningList;
+			ready_thread -> state = THREAD_RUNNING_STATE;
+
+			SCB -> ICSR |= SCB_ICSR_PENDSVSET_Msk;
+	}
 
   /* USER CODE END SVCall_IRQn 0 */
   /* USER CODE BEGIN SVCall_IRQn 1 */
@@ -512,7 +528,7 @@ __attribute__((naked)) void PendSV_Handler(void)
     __asm("STRB    r2, [r3]");
 
     __asm("push {lr}");
-    __asm("bl xrt_first_time_store_contex");
+    __asm("bl xrt_load_context");
     __asm("pop {lr}");
     __asm("B PendSV_Handler_exit");
 
@@ -532,6 +548,7 @@ __attribute__((naked)) void PendSV_Handler(void)
     __asm("pop {lr}");
 
     __asm("PendSV_Handler_exit:");
+	__asm("ldr lr, =0xFFFFFFFD");
     __asm("bx lr");
 }
 /**
