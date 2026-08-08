@@ -71,8 +71,6 @@ static void xrt_thread_stack_init(TCB_t* node){
     *(--sp) = 0;                     // R1
     *(--sp) = 0;                     // R0
 
-    node -> thread_sp = sp;          // tcb stack pointer must show the hardware sp base(R0).
-
     // SW Stack Frame
     *(--sp) = 0;                     // R4
     *(--sp) = 0;                     // R5
@@ -82,4 +80,6 @@ static void xrt_thread_stack_init(TCB_t* node){
     *(--sp) = 0;                     // R9
     *(--sp) = 0;                     // R10
     *(--sp) = 0;                     // R11
+
+    node -> thread_sp = sp;          // tcb stack pointer must show the sw sp base.
 }
