@@ -198,6 +198,7 @@ void SVC_Handler(void)
 				running_thread -> wake_tick = *r0_reg;
 				running_thread -> state = THREAD_BLOCKED_STATE;
 				running_thread -> blocked_reason = XRT_THREAD_OS_DELAY;
+				running_thread -> currently_located_list = &xrtKernelStoppedList;
 
 				SCB -> ICSR |= SCB_ICSR_PENDSVSET_Msk;
 			}
@@ -235,8 +236,6 @@ void SVC_Handler(void)
 			        break;
 			    }
 			    else{
-			        cdll_push_data_with_priority_order(&semaphore_ptr -> wating_list, running_node);
-
 			        running_thread -> state = THREAD_BLOCKED_STATE;
 			        running_thread -> blocked_reason = XRT_THREAD_BLOCK_SEMAPHORE;
 			        running_thread -> currently_located_list = &semaphore_ptr -> wating_list;
@@ -272,8 +271,6 @@ void SVC_Handler(void)
 
 						}
 					}
-					//TODO: now manage the running list in pendSV, we already know that currently running blocked Since lock operation unsuccessful
-					cdll_push_data_with_priority_order(&mutex_ptr -> waitingList, running_node);
 
 					running_thread -> currently_located_list = &mutex_ptr -> waitingList;
 					running_thread -> state = THREAD_BLOCKED_STATE;
@@ -369,75 +366,28 @@ void xrt_change_context_list(void){
 
 	cdll_node* currently_ready_node = xrtKernelReadyList.head;
 	if(currently_ready_node == NULL){
+		//must return idle thread
 		return;
 	}
 	TCB_t* currently_ready_thread = (TCB_t*)currently_ready_node -> data;
 
 	if(currently_running_thread -> state == THREAD_BLOCKED_STATE){
-		if(currently_running_thread -> blocked_reason == XRT_THREAD_OS_DELAY){
-			cdll_remove_known_node_from_list(&xrtKernelRunningList, currently_running);
-			cdll_insert_node_to_head(&xrtKernelStoppedList, currently_running);
-			currently_running_thread -> currently_located_list = &xrtKernelStoppedList;
+		cdll_remove_known_node_from_list(&xrtKernelRunningList, currently_running);
+		//in SVC Handler change the thread state, reason and currently located list updated.
+		cdll_list* list = currently_running_thread ->currently_located_list;
+		cdll_push_data_with_priority_order(list, currently_running);
 
-			cdll_node* ready_node = cdll_get_list_head(&xrtKernelReadyList);
-			if(ready_node != NULL){
-				cdll_remove_known_node_from_list(&xrtKernelReadyList, ready_node);
-				TCB_t* ready_thread = (TCB_t*)ready_node -> data;
-				ready_thread -> state = THREAD_RUNNING_STATE;
-				cdll_insert_node_to_head(&xrtKernelRunningList, ready_node);
-				ready_thread->currently_located_list = &xrtKernelRunningList;
-			}
-		}
-		else if(currently_running_thread-> blocked_reason == XRT_THREAD_BLOCK_MUTEX){
-			//in SVC Handler it pushed to semaphore waiting list.
-			cdll_remove_known_node_from_list(&xrtKernelRunningList, currently_running);
-			if(currently_ready_node != NULL){
-				currently_ready_thread-> state = THREAD_RUNNING_STATE;
-				cdll_remove_known_node_from_list(&xrtKernelReadyList, currently_ready_node);
-				cdll_insert_node_to_head(&xrtKernelRunningList, currently_ready_node);
-				currently_ready_thread -> currently_located_list = &xrtKernelRunningList;
-			}
-			else{
-				//load the idle thread.
-			}
-		}
-		else if(currently_running_thread -> blocked_reason == XRT_THREAD_BLOCK_SEMAPHORE){
-			//in SVC Handler it pushed to semaphore waiting list.
-			cdll_remove_known_node_from_list(&xrtKernelRunningList, currently_running);
-			if(currently_ready_node != NULL){
-				currently_ready_thread-> state = THREAD_RUNNING_STATE;
-				cdll_remove_known_node_from_list(&xrtKernelReadyList, currently_ready_node);
-				cdll_insert_node_to_head(&xrtKernelRunningList, currently_ready_node);
-				currently_ready_thread -> currently_located_list = &xrtKernelRunningList;
-			}
-			else{
-				//load the idle thread.
-			}
-		}
+		cdll_remove_known_node_from_list(&xrtKernelReadyList, currently_ready_node);
+		currently_ready_thread-> state = THREAD_RUNNING_STATE;
+		cdll_insert_node_to_head(&xrtKernelRunningList, currently_ready_node);
+		currently_ready_thread -> currently_located_list = &xrtKernelRunningList;
 	}
 	else{
 		if(currently_running_thread -> currentPriority > currently_ready_thread -> currentPriority){
 			return;
 		}
-		else if(currently_running_thread -> currentPriority == currently_ready_thread -> currentPriority){
-			cdll_remove_known_node_from_list(&xrtKernelRunningList, currently_running);
-			currently_running_thread -> state = THREAD_READY_STATE;
-			cdll_push_data_with_priority_order(&xrtKernelReadyList, currently_running);
-			currently_running_thread -> currently_located_list = &xrtKernelReadyList;
-
-			cdll_remove_known_node_from_list(&xrtKernelReadyList, currently_ready_node);
-			currently_ready_thread -> state = THREAD_RUNNING_STATE;
-			cdll_insert_node_to_head(&xrtKernelRunningList, currently_ready_node);
-			currently_ready_thread -> currently_located_list = &xrtKernelRunningList;
-		}
 		else{
-		    // running.priority < ready.priority
-		    // Şu an tek senaryo: os_delay'den uyanan yüksek priority thread ready'e döndü.
-		    // 2. dal ile aynı davranış şimdilik doğru.
-		    // TODO: mutex/semaphore unblock eklenince bu dal ayrıştırılmalı —
-		    //       priority inheritance ve owner semantiği farklı ele alınmalı.
-
-			//that's used for the os_delay since delayed thread is highest priority.
+		    // running.priority < ready.priority, occurs when os primitive(semaphore and mutex) used,
 			cdll_remove_known_node_from_list(&xrtKernelRunningList, currently_running);
 			currently_running_thread -> state = THREAD_READY_STATE;
 			cdll_push_data_with_priority_order(&xrtKernelReadyList, currently_running);
@@ -465,7 +415,7 @@ __attribute__((naked))void xrt_thread_store_context(void){
 	__asm("str r4,  [r0, #28];");
 	__asm("str r5,  [r0, #24];");
 	__asm("str r6,  [r0, #20];");
-	__asm("str r7,  [r0, #16];");// store related thread's frame pointer.
+	__asm("str r7,  [r0, #16];");// store related thread's frame pointer(stack pointer).
 	__asm("str r8,  [r0, #12];");
 	__asm("str r9,  [r0, #8];");
 	__asm("str r10, [r0, #4];");
