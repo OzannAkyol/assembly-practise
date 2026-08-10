@@ -38,13 +38,14 @@ bool xrt_thread_list_init(TCB_List_t* list){
     return true;
 }
 
-bool xrt_thread_init(TCB_List_t* list ,TCB_t* node, cdll_node* thread_node){
+bool xrt_thread_init(TCB_List_t* list ,TCB_t* node){
     if(list == NULL || node == NULL){
         return false;
     }
     xrt_thread_stack_init(node);
 
-    cdll_push_data_with_priority_order(list, thread_node);
+    node -> thread_node -> data = node;
+    cdll_push_data_with_priority_order(list, node -> thread_node);
     node -> currently_located_list = list;
     return true;
 }
