@@ -19,11 +19,12 @@ typedef cdll_node xrtSemaphore_node;
 typedef struct{
     uint16_t semaphore_value;
     uint16_t semaphore_max_value;        // counting icin ust sinir (binary'de 1)
-    xrtSemaphore_list wating_list;      // priority ordered
+    xrtSemaphore_list waiting_list;      // priority ordered
 }xrtSemaphore_t;
 
 void xrt_semaphore_init(xrtSemaphore_t* semaphore, uint16_t initial_value, uint16_t max_value);
 void xrt_semaphore_release(xrtSemaphore_t* semaphore_p);
 void xrt_semaphore_take(xrtSemaphore_t* semaphore_p);
-
+void xrt_semaphore_release_from_ISR(xrtSemaphore_t* semaphore_p);
+void xrt_semaphore_signal_locked(xrtSemaphore_t* semaphore_p);
 #endif /* INC_XRT_SEMAPHORE_H_ */

@@ -207,10 +207,10 @@ void SVC_Handler(void)
 			{
 			    xrtSemaphore_t* semaphore_ptr = (xrtSemaphore_t*)*r0_reg; // it points to which semaphore resource taken.
 			    // both binary and counting semaphore the semaphore value is reachable.
-			    if(semaphore_ptr -> wating_list.head != NULL){
-			        TCB_t* waiting_thread = (TCB_t*)semaphore_ptr -> wating_list.head -> data;
+			    if(semaphore_ptr -> waiting_list.head != NULL){
+			        TCB_t* waiting_thread = (TCB_t*)semaphore_ptr -> waiting_list.head -> data;
 
-			        cdll_remove_known_node_from_list(&semaphore_ptr -> wating_list, waiting_thread -> thread_node);
+			        cdll_remove_known_node_from_list(&semaphore_ptr -> waiting_list, waiting_thread -> thread_node);
 			        cdll_push_data_with_priority_order(&xrtKernelReadyList, waiting_thread -> thread_node);
 			        waiting_thread -> currently_located_list  = &xrtKernelReadyList;
 
@@ -237,7 +237,7 @@ void SVC_Handler(void)
 			    else{
 			        running_thread -> state = THREAD_BLOCKED_STATE;
 			        running_thread -> blocked_reason = XRT_THREAD_BLOCK_SEMAPHORE;
-			        running_thread -> currently_located_list = &semaphore_ptr -> wating_list;
+			        running_thread -> currently_located_list = &semaphore_ptr -> waiting_list;
 			        SCB -> ICSR |= SCB_ICSR_PENDSVSET_Msk;
 			    }
 
@@ -361,7 +361,6 @@ void xrt_change_context_list(void){
 
 	TCB_t* running_thread = (TCB_t*)xrtKernelRunningList.head ->data;
 	TCB_t* ready_thread = (TCB_t*)xrtKernelReadyList.head -> data;
-
 
 	if(running_thread -> state == THREAD_BLOCKED_STATE){
 		cdll_remove_known_node_from_list(&xrtKernelRunningList, running_thread -> thread_node);
