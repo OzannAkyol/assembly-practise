@@ -9,12 +9,11 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include <main.h>
 #include "xrt_queue.h"
+#include "xrt_thread.h"
 
-// TODO: it will be a static allocation or dynamic allocation, not fixed.
-static xrtSemaphore_t read_access_semaphore;
-static xrtSemaphore_t write_access_semaphore;
-static xrtMutex_t mutex_queue;
+extern TCB_List_t xrtKernelReadyList;
 
 #define XRT_QUEUE_NOT_AVAILABLE_AT_STARTUP			(0u)
 
@@ -23,54 +22,80 @@ void xrt_queue_init(xrtQueue_t* queue){
 		queue -> write_ptr = queue -> queue_data;
 		queue -> read_ptr = queue -> queue_data;
 
-		//for now, it is a static, and single queue test
-		xrt_semaphore_init(&write_access_semaphore, queue -> queue_capacity, queue -> queue_capacity);
-		xrt_semaphore_init(&read_access_semaphore, XRT_QUEUE_NOT_AVAILABLE_AT_STARTUP, queue -> queue_capacity);
-
-		xrt_mutex_init(&mutex_queue);
+		xrt_semaphore_init(queue -> write_access_sem, queue -> queue_capacity / queue-> block_size, queue -> queue_capacity / queue-> block_size);
+		xrt_semaphore_init(queue -> read_access_sem, XRT_QUEUE_NOT_AVAILABLE_AT_STARTUP, queue -> queue_capacity / queue-> block_size);
 	}
 }
 
-bool xrt_queue_send(xrtQueue_t* queue, uint32_t* data){
+//Fixed size
+bool xrt_queue_send(xrtQueue_t* queue, void* data){
 	if(queue == NULL || data == NULL){
 		return false;
 	}
 
-	xrt_semaphore_take(&write_access_semaphore);
+	xrt_semaphore_take(queue -> write_access_sem);
+	uint32_t old_prio = xrt_enter_critical_section();
 
-	// update base priority, TODO: for now we test with using mutex, normally, we use a base priority for ISR safety.
-	xrt_mutex_lock(&mutex_queue);
-
-	*queue -> write_ptr = *data;
-	 queue -> write_ptr++;
+	memcpy(queue -> write_ptr, data, queue-> block_size);
+	queue -> write_ptr+= queue-> block_size;
 
 	if(queue -> write_ptr == queue-> queue_data + queue-> queue_capacity){
 		queue -> write_ptr = queue-> queue_data;
 	}
-	xrt_mutex_unlock(&mutex_queue);
-	// load original base priority
-	xrt_semaphore_release(&read_access_semaphore);
+
+	xrt_exit_critical_section(old_prio);
+
+	xrt_semaphore_release(queue -> read_access_sem);
+
 	return true;
 }
 
-bool xrt_queue_receive(xrtQueue_t* queue, uint32_t* data){
+//Fixed size
+bool xrt_queue_receive(xrtQueue_t* queue, void* data){
 	if(queue == NULL || data == NULL){
 		return false;
 	}
 
-	xrt_semaphore_take(&read_access_semaphore);
+	xrt_semaphore_take(queue -> read_access_sem);
 
-	xrt_mutex_lock(&mutex_queue);
+	uint32_t old_prio = xrt_enter_critical_section();
 
-	*data = *queue->read_ptr;
-	 queue-> read_ptr++;
+	memcpy(data, queue->read_ptr, queue-> block_size);
+	queue-> read_ptr += queue->block_size;
 
 	if(queue -> read_ptr == queue -> queue_data + queue -> queue_capacity){
 		queue -> read_ptr  = queue -> queue_data;
 	}
 
-	xrt_mutex_unlock(&mutex_queue);
-	xrt_semaphore_release(&write_access_semaphore);
+	xrt_exit_critical_section(old_prio);
+	xrt_semaphore_release(queue -> write_access_sem);
 
+	return true;
+}
+
+bool xrt_queue_send_from_ISR(xrtQueue_t* queue, void* data){
+    if(queue == NULL || data == NULL){
+		return false;
+    }
+
+	uint32_t old_priority = xrt_enter_critical_section();
+
+	if(queue -> write_access_sem -> semaphore_value < 1){
+		xrt_exit_critical_section(old_priority);
+		return false;
+	}
+
+	memcpy(queue -> write_ptr, data, queue -> block_size);
+	queue -> write_access_sem -> semaphore_value--;
+
+	queue -> write_ptr += queue -> block_size;
+
+	if(queue -> write_ptr == queue -> queue_data + queue -> queue_capacity){
+		queue -> write_ptr = queue -> queue_data;
+	}
+
+	xrt_semaphore_signal_locked(queue-> read_access_sem);
+
+	xrt_exit_critical_section(old_priority);
 	return true;
 }
