@@ -65,4 +65,8 @@ void xrt_set_os_priority_order(void);
 void xrt_thread_yield(void);
 void xrt_thread_delay(uint32_t ms);
 
+uint32_t xrt_enter_critical_section(void);
+void xrt_exit_critical_section(uint32_t old);
+
+
 #endif /* INC_XRT_THREAD_H_ */

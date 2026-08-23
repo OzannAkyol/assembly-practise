@@ -16,6 +16,19 @@ static void xrt_thread_stack_init(TCB_t* node);
 volatile bool is_os_kernel_started = false;
 volatile bool is_os_first_cs_occurs = false;
 
+#define KERNEL_BASEPRIO_THRESHOLD		(5u)
+#define KERNEL_BASEPRI  (KERNEL_BASEPRIO_THRESHOLD << (8U - __NVIC_PRIO_BITS))   // 5 << 4 = 0x50
+
+uint32_t xrt_enter_critical_section(void){
+    uint32_t old = __get_BASEPRI();
+    __set_BASEPRI(KERNEL_BASEPRI);
+    return old;
+}
+
+void xrt_exit_critical_section(uint32_t old){
+    __set_BASEPRI(old);
+}
+
 void xrt_thread_start(){
     __asm("SVC #6");  // os start
 }
