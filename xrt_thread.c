@@ -11,6 +11,7 @@
 #include "xrt_thread.h"
 #include "main.h"
 
+
 static void xrt_thread_stack_init(TCB_t* node);
 
 volatile bool is_os_kernel_started = false;
@@ -18,6 +19,9 @@ volatile bool is_os_first_cs_occurs = false;
 
 #define KERNEL_BASEPRIO_THRESHOLD		(5u)
 #define KERNEL_BASEPRI  (KERNEL_BASEPRIO_THRESHOLD << (8U - __NVIC_PRIO_BITS))   // 5 << 4 = 0x50
+
+extern TCB_List_t xrtKernelReadyList;
+extern TCB_List_t xrtKernelRunningList;
 
 uint32_t xrt_enter_critical_section(void){
     uint32_t old = __get_BASEPRI();
@@ -29,8 +33,19 @@ void xrt_exit_critical_section(uint32_t old){
     __set_BASEPRI(old);
 }
 
-void xrt_thread_start(){
-    __asm("SVC #6");  // os start
+void xrt_thread_start(void){
+	TCB_t* ready_thread = (TCB_t*)cdll_get_list_head(&xrtKernelReadyList) -> data;
+
+	cdll_remove_known_node_from_list(&xrtKernelReadyList, ready_thread -> thread_node);
+
+	cdll_push_data_with_priority_order(&xrtKernelRunningList, ready_thread -> thread_node);
+	ready_thread -> currently_located_list = &xrtKernelRunningList;
+	ready_thread -> state = THREAD_RUNNING_STATE;
+
+	is_os_first_cs_occurs = true;
+	is_os_kernel_started = true;
+
+	SCB -> ICSR |= SCB_ICSR_PENDSVSET_Msk;
 }
 
 void xrt_set_os_priority_order(void){
