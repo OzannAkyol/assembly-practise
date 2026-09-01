@@ -30,11 +30,15 @@ __attribute__((aligned(8)))uint32_t thread4_stack[THREAD4_STACK_SIZE];
 #define THREAD5_STACK_SIZE		1024
 __attribute__((aligned(8)))uint32_t thread5_stack[THREAD5_STACK_SIZE];
 
+#define IDLE_THREAD_STACK_SIZE		32
+__attribute__((aligned(8)))uint32_t idle_stack[IDLE_THREAD_STACK_SIZE];
+
 void t1_dummy_function(void);
 void t2_dummy_function(void);
 void t3_dummy_function(void);
 void t4_dummy_function(void);
 void t5_dummy_function(void);
+void idle_exec_function(void);
 
 #define BLOCK_SIZE   64
 #define NUM_BLOCKS   4
@@ -161,6 +165,18 @@ void t5_dummy_function(void){
 	}
 }
 
+void idle_exec_function(void){
+	int a = 0xDEADBEEF;
+	int b = 0xDEADBEEF;
+
+	(void)a;
+	(void)b;
+
+	while(1){
+		;;
+	}
+}
+
 cdll_node thread1_node;
 cdll_node thread2_node;
 cdll_node thread3_node;
@@ -237,6 +253,19 @@ TCB_t tcb5 = {
 		.thread_node = &thread5_node,
 };
 
+TCB_t idle_tcb = {
+        .fptr = idle_exec_function,
+        .ThreadStackSize = IDLE_THREAD_STACK_SIZE,
+        .base_priority = IDLE_PRIORTY,
+        .state = THREAD_READY_STATE,
+        .thread_id = THREAD_ID_IDLE,
+        .thread_base_ptr = idle_stack,
+        .thread_sp = idle_stack + IDLE_THREAD_STACK_SIZE,
+		.wake_tick = 0,
+		.blocked_reason = XRT_BLOCK_NONE,
+		.currentPriority = IDLE_PRIORTY,
+		.thread_node = &idle_node,
+};
 
 cdll_list list;
 
@@ -288,6 +317,7 @@ int main(void)
   xrt_thread_init(&xrtKernelReadyList, &tcb3);
   xrt_thread_init(&xrtKernelReadyList, &tcb4);
   xrt_thread_init(&xrtKernelReadyList, &tcb5);
+  xrt_thread_init(&xrtKernelReadyList, &idle_tcb);
 
 //  xrt_semaphore_init(&semaphore1, semaphore1.semaphore_value, semaphore1.semaphore_max_value);
   xrt_queue_init(&queue1);

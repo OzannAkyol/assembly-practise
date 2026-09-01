@@ -14,6 +14,7 @@
 typedef cdll_list TCB_List_t;
 
 typedef enum{
+	IDLE_PRIORTY,
     LOW_PRIORITY,
     MEDIUM_PRIORITY,
     HIGH_PRIORITY,
@@ -21,12 +22,12 @@ typedef enum{
 }Priority_t;
 
 typedef enum{
+    THREAD_ID_IDLE,
     THREAD_ID_1,
     THREAD_ID_2,
     THREAD_ID_3,
     THREAD_ID_4,
     THREAD_ID_5,
-    THREAD_ID_RESERVED,
     MAX_NUM_OF_THREAD
 }ThreadId_t;
 
@@ -60,7 +61,7 @@ typedef struct{
 
 bool xrt_thread_list_init(TCB_List_t* list);
 bool xrt_thread_init(TCB_List_t* list ,TCB_t* node);
-void xrt_thread_start();
+void xrt_thread_start(void);
 void xrt_set_os_priority_order(void);
 void xrt_thread_yield(void);
 void xrt_thread_delay(uint32_t ms);

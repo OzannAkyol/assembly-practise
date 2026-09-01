@@ -76,6 +76,8 @@ extern TCB_List_t xrtKernelRunningList;
 extern TCB_List_t xrtKernelStoppedList;
 extern volatile bool is_os_kernel_started;
 extern volatile bool is_os_first_cs_occurs;
+
+extern TCB_t idle_tcb;
 /* USER CODE END EV */
 
 /**************************/
