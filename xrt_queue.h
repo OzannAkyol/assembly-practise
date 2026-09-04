@@ -10,7 +10,6 @@
 
 #include "xrt_list.h"
 #include "xrt_semaphore.h"
-#include "xrt_mutex.h"
 
 typedef cdll_list xrt_queue_list;
 

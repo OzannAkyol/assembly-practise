@@ -14,7 +14,7 @@
 typedef cdll_list TCB_List_t;
 
 typedef enum{
-	IDLE_PRIORTY,
+	IDLE_PRIORITY,
     LOW_PRIORITY,
     MEDIUM_PRIORITY,
     HIGH_PRIORITY,
@@ -48,10 +48,10 @@ typedef struct{
     ThreadId_t thread_id;
     uint32_t* thread_sp;
     uint32_t* thread_base_ptr;
-    uint32_t ThreadStackSize;
+    uint32_t thread_stack_size_word;
     void (*fptr)(void);     // fp to thread execution function.
     Priority_t base_priority;
-    Priority_t currentPriority;
+    Priority_t current_priority;
     ThreadState_t state;
     ThreadBlockedReason_t blocked_reason;
     uint32_t wake_tick;
@@ -59,15 +59,13 @@ typedef struct{
     cdll_node* thread_node;	//embed the node information to tcb Since decrease the code complexity.
 }TCB_t;
 
-bool xrt_thread_list_init(TCB_List_t* list);
-bool xrt_thread_init(TCB_List_t* list ,TCB_t* node);
-void xrt_thread_start(void);
-void xrt_set_os_priority_order(void);
+bool xrt_thread_create(TCB_t* tcb, cdll_node* tcb_node,
+                       void       (*exec_function)(void),
+                       Priority_t priority,
+                       uint32_t*  stack_base,
+                       uint32_t   stack_size_in_word);
 void xrt_thread_yield(void);
 void xrt_thread_delay(uint32_t ms);
 
-uint32_t xrt_enter_critical_section(void);
-void xrt_exit_critical_section(uint32_t old);
-
-
+void xrt_thread_delay_from_svc(uint32_t arg, TCB_t* running_thread);
 #endif /* INC_XRT_THREAD_H_ */

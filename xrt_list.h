@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include "cmsis_gcc.h"
 
 typedef struct cdll_node_t cdll_node;

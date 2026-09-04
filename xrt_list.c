@@ -152,7 +152,7 @@ bool cdll_push_data_with_priority_order(cdll_list* list, cdll_node* given_node){
 	while(size-- > 0){
 		TCB_t* tmp_thread = (TCB_t*) tmp_node -> data;
 
-		if(tmp_thread -> currentPriority < given_thread -> currentPriority){
+		if(tmp_thread -> current_priority < given_thread -> current_priority){
 			given_node -> next = tmp_node;
 			given_node -> prev = tmp_node -> prev;
 

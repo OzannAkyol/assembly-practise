@@ -9,6 +9,7 @@
 #define INC_XRT_SEMAPHORE_H_
 
 #include "xrt_list.h"
+#include "xrt_thread.h"
 
 #define XRT_SEMAPHORE_AVAILABLE			(1U)
 #define XRT_SEMAPHORE_NOT_AVAILABLE		(0U)
@@ -27,4 +28,8 @@ void xrt_semaphore_release(xrtSemaphore_t* semaphore_p);
 void xrt_semaphore_take(xrtSemaphore_t* semaphore_p);
 void xrt_semaphore_release_from_ISR(xrtSemaphore_t* semaphore_p);
 void xrt_semaphore_signal_locked(xrtSemaphore_t* semaphore_p);
+
+void xrt_semaphore_take_from_svc(xrtSemaphore_t* semaphore, TCB_t* running_thread);
+void xrt_semaphore_release_from_svc(xrtSemaphore_t* semaphore, TCB_t* running_thread);
+
 #endif /* INC_XRT_SEMAPHORE_H_ */

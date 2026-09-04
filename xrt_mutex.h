@@ -21,6 +21,7 @@ typedef struct{
 bool xrt_mutex_init(xrtMutex_t* mutex_obj);
 void xrt_mutex_lock(xrtMutex_t* mutex_obj);
 void xrt_mutex_unlock(xrtMutex_t* mutex_obj);
-void xrt_update_priority(xrtMutex_t* mutex_obj);
+void xrt_mutex_lock_from_svc(xrtMutex_t* mutex_obj, TCB_t* running_thread);
+void xrt_mutex_unlock_from_svc(xrtMutex_t* mutex_ptr, TCB_t* running_thread);
 
 #endif /* INC_XRT_MUTEX_H_ */
