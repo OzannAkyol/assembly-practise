@@ -150,6 +150,23 @@ void xrt_kernel_check_sleeping_threads(void){
 	 xrt_kernel_exit_critical(old_prio);
 }
 
+void xrt_kernel_wake_thread(TCB_t* thread){
+    if(thread == NULL){
+        return;
+    }
+
+    thread -> state = THREAD_READY_STATE;
+    thread -> blocked_reason = XRT_BLOCK_NONE;
+    cdll_push_data_with_priority_order(&xrt_kernel_ready_list, thread->thread_node);
+    thread -> currently_located_list = &xrt_kernel_ready_list;
+
+    TCB_t* running_thread = (TCB_t*)xrt_kernel_running_list.head->data;
+
+    if(thread -> current_priority > running_thread -> current_priority){
+        xrt_port_request_context_switch();
+    }
+}
+
 static void idle_exec_function(void){
 	while(1){
 		__NOP();

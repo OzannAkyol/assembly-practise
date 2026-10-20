@@ -11,11 +11,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "xrt_thread.h"
 #include "xrt_port.h"
 
 bool xrt_kernel_init(void);
 bool xrt_kernel_start(void);
 void xrt_kernel_check_sleeping_threads(void);
+void xrt_kernel_wake_thread(TCB_t* thread);
 
 __STATIC_FORCEINLINE uint32_t xrt_kernel_enter_critical(void){
 	return xrt_port_enter_critical();
