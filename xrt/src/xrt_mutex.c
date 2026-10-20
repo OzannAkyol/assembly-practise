@@ -9,6 +9,7 @@
 
 #include "xrt_list.h"
 #include "xrt_mutex.h"
+#include "xrt_kernel.h"
 #include "xrt_kernel_internal.h"
 #include "xrt_port.h"
 #include "xrt_system_calls.h"
@@ -18,8 +19,8 @@ bool xrt_mutex_init(xrt_mutex_t* mutex_obj){
 		return false;
 	}
 
-	mutex_obj -> mutexOwner = NULL;
-	return cdll_init_list(&mutex_obj -> waitingList);
+	mutex_obj -> mutex_owner = NULL;
+	return cdll_init_list(&mutex_obj -> waiting_list);
 }
 
 void xrt_mutex_lock(xrt_mutex_t* mutex_obj){
@@ -31,24 +32,24 @@ void xrt_mutex_unlock(xrt_mutex_t* mutex_obj){
 }
 
 void xrt_mutex_lock_from_svc(xrt_mutex_t* mutex_ptr, TCB_t* running_thread){
-	if(mutex_ptr -> mutexOwner == running_thread){
+	if(mutex_ptr -> mutex_owner == running_thread){
 		return;
 	}
 
-	if(mutex_ptr -> mutexOwner == NULL ){
-		mutex_ptr -> mutexOwner = running_thread;
+	if(mutex_ptr -> mutex_owner == NULL ){
+		mutex_ptr -> mutex_owner = running_thread;
 	}
 	else{
-		if(running_thread -> current_priority > mutex_ptr -> mutexOwner -> current_priority){
-			mutex_ptr -> mutexOwner -> current_priority = running_thread -> current_priority;
+		if(running_thread -> current_priority > mutex_ptr -> mutex_owner -> current_priority){
+			mutex_ptr -> mutex_owner -> current_priority = running_thread -> current_priority;
 			//find the where owner located.
-			cdll_list* located_list = mutex_ptr -> mutexOwner -> currently_located_list;
+			cdll_list* located_list = mutex_ptr -> mutex_owner -> currently_located_list;
 			if(located_list != &xrt_kernel_stopped_list){
-				cdll_remove_known_node_from_list(located_list, mutex_ptr -> mutexOwner -> thread_node);
-				cdll_push_data_with_priority_order(located_list, mutex_ptr -> mutexOwner -> thread_node);
+				cdll_remove_known_node_from_list(located_list, mutex_ptr -> mutex_owner -> thread_node);
+				cdll_push_data_with_priority_order(located_list, mutex_ptr -> mutex_owner -> thread_node);
 			}
 		}
-		running_thread -> currently_located_list = &mutex_ptr -> waitingList;
+		running_thread -> currently_located_list = &mutex_ptr -> waiting_list;
 		running_thread -> state = THREAD_BLOCKED_STATE;
 		running_thread -> blocked_reason = XRT_THREAD_BLOCK_MUTEX;
 
@@ -57,7 +58,7 @@ void xrt_mutex_lock_from_svc(xrt_mutex_t* mutex_ptr, TCB_t* running_thread){
 }
 
 void xrt_mutex_unlock_from_svc(xrt_mutex_t* mutex_ptr, TCB_t* running_thread){
-	if(mutex_ptr -> mutexOwner != running_thread){
+	if(mutex_ptr -> mutex_owner != running_thread){
 		return;
 	}
 	else{
@@ -65,23 +66,16 @@ void xrt_mutex_unlock_from_svc(xrt_mutex_t* mutex_ptr, TCB_t* running_thread){
 			running_thread -> current_priority = running_thread -> base_priority;
 		}
 
-		if(mutex_ptr-> waitingList.head != NULL){
-			TCB_t* removed_thread = mutex_ptr-> waitingList.head -> data;
+		if(mutex_ptr-> waiting_list.head != NULL){
+			TCB_t* removed_thread = mutex_ptr-> waiting_list.head -> data;
 
-			cdll_remove_known_node_from_list(&mutex_ptr-> waitingList, removed_thread -> thread_node);
+			cdll_remove_known_node_from_list(&mutex_ptr-> waiting_list, removed_thread -> thread_node);
+			xrt_kernel_wake_thread(removed_thread);
 
-			cdll_push_data_with_priority_order(&xrt_kernel_ready_list, removed_thread -> thread_node);
-			removed_thread -> currently_located_list = &xrt_kernel_ready_list;
-			removed_thread -> blocked_reason = XRT_BLOCK_NONE;
-			removed_thread -> state = THREAD_READY_STATE;
-			mutex_ptr -> mutexOwner = removed_thread;
-
-			if(removed_thread -> current_priority > running_thread -> current_priority){
-				xrt_port_request_context_switch();
-			}
+			mutex_ptr -> mutex_owner = removed_thread;
 		}
 		else{
-			mutex_ptr -> mutexOwner = NULL;
+			mutex_ptr -> mutex_owner = NULL;
 		}
 	}
 }

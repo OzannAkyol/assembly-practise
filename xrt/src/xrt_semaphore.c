@@ -7,16 +7,19 @@
 #include <stddef.h>
 
 #include "xrt_semaphore.h"
-#include "xrt_thread.h"
 #include "xrt_kernel.h"
 #include "xrt_kernel_internal.h"
 #include "xrt_system_calls.h"
 
 bool xrt_semaphore_init(xrt_semaphore_t* semaphore, uint16_t initial_value, uint16_t max_value){
-	if(semaphore == NULL || initial_value == 0 || max_value == 0){
+	if(semaphore == NULL || initial_value > max_value || max_value == 0){
 		return false;
 	}
-    cdll_init_list(&semaphore -> waiting_list);
+    
+	if(!cdll_init_list(&semaphore -> waiting_list)){
+		return false;
+	}
+	
     semaphore -> semaphore_value = initial_value;
     semaphore -> semaphore_max_value = max_value;
 
@@ -43,17 +46,7 @@ void xrt_semaphore_signal_locked(xrt_semaphore_t* semaphore_p){
 	if(semaphore_p -> waiting_list.head != NULL){
 		TCB_t* waiting_thread = (TCB_t*)cdll_get_list_head(&semaphore_p-> waiting_list)->data;
 		cdll_remove_known_node_from_list(&semaphore_p-> waiting_list, waiting_thread -> thread_node);
-
-		waiting_thread -> state = THREAD_READY_STATE;
-		waiting_thread -> blocked_reason = XRT_BLOCK_NONE;
-		cdll_push_data_with_priority_order(&xrt_kernel_ready_list, waiting_thread -> thread_node);
-		waiting_thread -> currently_located_list = &xrt_kernel_ready_list;
-
-		TCB_t* running_thread = (TCB_t*)xrt_kernel_running_list.head -> data;
-
-	    if(waiting_thread -> current_priority > running_thread -> current_priority){
-	    	xrt_port_request_context_switch();
-	    }
+		xrt_kernel_wake_thread(waiting_thread);
 	}
 	else{
 		semaphore_p -> semaphore_value++;

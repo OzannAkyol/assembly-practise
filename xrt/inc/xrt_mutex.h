@@ -14,8 +14,8 @@ typedef cdll_list	mutex_list;
 typedef cdll_node	mutex_node;
 
 typedef struct{
-	TCB_t* mutexOwner; // it should points to thread TCB,
-	mutex_list waitingList;
+	TCB_t* mutex_owner; // it should points to thread TCB,
+	mutex_list waiting_list;
 }xrt_mutex_t;
 
 bool xrt_mutex_init(xrt_mutex_t* mutex_obj);
