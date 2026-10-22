@@ -13,7 +13,7 @@
 #include "xrt_semaphore.h"
 #include "xrt_thread.h"
 
-void xrt_system_calls_dispatch(uint8_t svc_number, uint32_t* svc_arg){
+void xrt_system_calls_dispatch(uint8_t svc_number, uint32_t svc_arg){
     uint32_t old_prio = xrt_kernel_enter_critical();
 
     TCB_t* running_thread = xrt_kernel_running_list.head->data;

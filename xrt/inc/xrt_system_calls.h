@@ -34,6 +34,6 @@ typedef enum{
                    : [svc_num] "I" (svc_number)                 \
                    : "memory")
 
-void xrt_system_calls_dispatch(uint8_t svc_number, uint32_t* svc_arg);
+void xrt_system_calls_dispatch(uint8_t svc_number, uint32_t svc_arg);
 
 #endif /* INC_XRT_SYSTEM_CALLS_H_ */

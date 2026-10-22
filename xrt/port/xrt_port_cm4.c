@@ -111,7 +111,7 @@ __attribute__((naked)) void PendSV_Handler(void)
 void SVC_Handler(void)
 {
 	uint32_t* thread_sp = (uint32_t*)__get_PSP();
-	uint32_t* svc_arg    = (uint32_t*)*thread_sp;
+	uint32_t svc_arg    = *thread_sp;
 
 	thread_sp += STACKED_PC_OFFSET;
 
