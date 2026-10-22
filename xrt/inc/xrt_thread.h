@@ -67,5 +67,5 @@ bool xrt_thread_create(TCB_t* tcb, cdll_node* tcb_node,
 void xrt_thread_yield(void);
 void xrt_thread_delay(uint32_t ms);
 
-void xrt_thread_delay_from_svc(uint32_t* arg, TCB_t* running_thread);
+void xrt_thread_delay_from_svc(uint32_t arg, TCB_t* running_thread);
 #endif /* INC_XRT_THREAD_H_ */

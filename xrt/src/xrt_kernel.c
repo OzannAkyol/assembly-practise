@@ -11,6 +11,9 @@
 #include "xrt_list.h"
 #include "xrt_thread.h"
 
+#include "xrt_mutex.h"
+#include "xrt_semaphore.h"
+
 #define IDLE_THREAD_STACK_SIZE		(64u)
 __attribute__((aligned(8))) static uint32_t idle_stack[IDLE_THREAD_STACK_SIZE];
 
@@ -165,6 +168,18 @@ void xrt_kernel_wake_thread(TCB_t* thread){
     if(thread -> current_priority > running_thread -> current_priority){
         xrt_port_request_context_switch();
     }
+}
+
+void xrt_kernel_block_thread(TCB_t* thread, cdll_list* wait_list, ThreadBlockedReason_t reason){
+    if(thread == NULL || wait_list == NULL){
+        return;
+    }
+
+    thread -> state = THREAD_BLOCKED_STATE;
+    thread -> blocked_reason = reason;
+    thread -> currently_located_list = wait_list;
+
+    xrt_port_request_context_switch();
 }
 
 static void idle_exec_function(void){

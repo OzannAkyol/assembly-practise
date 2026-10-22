@@ -12,14 +12,10 @@
 #include "xrt_system_calls.h"
 
 bool xrt_semaphore_init(xrt_semaphore_t* semaphore, uint16_t initial_value, uint16_t max_value){
-	if(semaphore == NULL || initial_value > max_value || max_value == 0){
+	if(semaphore == NULL || initial_value == 0 || max_value == 0){
 		return false;
 	}
-    
-	if(!cdll_init_list(&semaphore -> waiting_list)){
-		return false;
-	}
-	
+    cdll_init_list(&semaphore -> waiting_list);
     semaphore -> semaphore_value = initial_value;
     semaphore -> semaphore_max_value = max_value;
 
@@ -63,11 +59,12 @@ void xrt_semaphore_signal_locked(xrt_semaphore_t* semaphore_p){
  *       semaphore is not available; the caller is responsible for the fallback.
  */
 bool xrt_semaphore_try_take_locked(xrt_semaphore_t* semaphore){
-    if(semaphore == NULL || semaphore->semaphore_value == 0){
+    if(semaphore == NULL || semaphore -> semaphore_value == 0){
         return false;
     }
 
-    semaphore->semaphore_value--;
+    semaphore -> semaphore_value--;
+
     return true;
 }
 
@@ -77,14 +74,7 @@ void xrt_semaphore_release_from_svc(xrt_semaphore_t* semaphore){
 }
 
 void xrt_semaphore_take_from_svc(xrt_semaphore_t* semaphore, TCB_t* running_thread){
-	//it means that the resource could be taken.
-	if(semaphore -> semaphore_value > 0){
-		semaphore -> semaphore_value--;
+	if(!xrt_semaphore_try_take_locked(semaphore)){
+		xrt_kernel_block_thread(running_thread, &semaphore -> waiting_list, XRT_THREAD_BLOCK_SEMAPHORE);
 	}
-	else{
-		running_thread -> state = THREAD_BLOCKED_STATE;
-		running_thread -> blocked_reason = XRT_THREAD_BLOCK_SEMAPHORE;
-	    running_thread -> currently_located_list = &semaphore -> waiting_list;
-	    xrt_port_request_context_switch();
-	  }
 }

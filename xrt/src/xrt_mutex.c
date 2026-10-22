@@ -49,11 +49,7 @@ void xrt_mutex_lock_from_svc(xrt_mutex_t* mutex_ptr, TCB_t* running_thread){
 				cdll_push_data_with_priority_order(located_list, mutex_ptr -> mutex_owner -> thread_node);
 			}
 		}
-		running_thread -> currently_located_list = &mutex_ptr -> waiting_list;
-		running_thread -> state = THREAD_BLOCKED_STATE;
-		running_thread -> blocked_reason = XRT_THREAD_BLOCK_MUTEX;
-
-		xrt_port_request_context_switch();
+		xrt_kernel_block_thread(running_thread, &mutex_ptr->waiting_list, XRT_THREAD_BLOCK_MUTEX);
 	}
 }
 

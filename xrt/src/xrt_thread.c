@@ -11,7 +11,7 @@
 #include "xrt_thread.h"
 #include "xrt_system_calls.h"
 #include "xrt_kernel_internal.h"
-#include "xrt_port.h"
+#include "xrt_kernel.h"
 
 #define XRT_THREAD_MIN_STACK_WORDS      (32u)   /* HW frame(8) + SW frame(8) + nested exception margin */
 #define XRT_STACK_ALIGNMENT_IN_BYTE     (8u)    /* AAPCS / exception frame requirement */
@@ -88,15 +88,10 @@ void xrt_thread_delay(uint32_t ms){
     }
 }
 
-void xrt_thread_delay_from_svc(uint32_t* arg, TCB_t* running_thread){
-	running_thread -> wake_tick = (uint32_t)arg;
-	running_thread -> state = THREAD_BLOCKED_STATE;
-	running_thread -> blocked_reason = XRT_THREAD_OS_DELAY;
-	running_thread -> currently_located_list = &xrt_kernel_stopped_list;
-
-	xrt_port_request_context_switch();
+void xrt_thread_delay_from_svc(uint32_t arg, TCB_t* running_thread){
+	running_thread -> wake_tick = arg;
+	xrt_kernel_block_thread(running_thread, &xrt_kernel_stopped_list, XRT_THREAD_OS_DELAY);
 }
-
 
 static void xrt_thread_stack_frame_init(TCB_t* node){
     uint32_t* sp = node->thread_sp;
