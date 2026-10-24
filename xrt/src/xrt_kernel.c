@@ -72,9 +72,7 @@ bool xrt_kernel_start(void){
 	if(node != NULL && !is_os_kernel_started){
 		TCB_t* ready_thread = (TCB_t*)node-> data;
 
-		cdll_remove_known_node_from_list(&xrt_kernel_ready_list, ready_thread -> thread_node);
-		cdll_push_data_with_priority_order(&xrt_kernel_running_list, ready_thread -> thread_node);
-		ready_thread -> currently_located_list = &xrt_kernel_running_list;
+		xrt_kernel_move_thread(ready_thread, &xrt_kernel_running_list);
 		ready_thread -> state = THREAD_RUNNING_STATE;
 
 		is_os_first_cs_occurs = true;
@@ -116,10 +114,8 @@ void xrt_kernel_schedule(void){
 		running_thread -> currently_located_list = &xrt_kernel_ready_list;
 	}
 
-	cdll_remove_known_node_from_list(&xrt_kernel_ready_list, ready_thread -> thread_node);
 	ready_thread -> state = THREAD_RUNNING_STATE;
-	cdll_insert_node_to_head(&xrt_kernel_running_list, ready_thread -> thread_node);
-	ready_thread -> currently_located_list = &xrt_kernel_running_list;
+	xrt_kernel_move_thread(ready_thread, &xrt_kernel_running_list);
 }
 
 void xrt_kernel_check_sleeping_threads(void){
@@ -139,9 +135,8 @@ void xrt_kernel_check_sleeping_threads(void){
 				  if(blocked_thread->wake_tick == 0){
 					  blocked_thread->blocked_reason = XRT_BLOCK_NONE;
 					  blocked_thread->state = THREAD_READY_STATE;
-					  cdll_remove_known_node_from_list(&xrt_kernel_stopped_list, current);
-					  cdll_push_data_with_priority_order(&xrt_kernel_ready_list, current);
-					  blocked_thread->currently_located_list = &xrt_kernel_ready_list;
+
+					  xrt_kernel_move_thread(blocked_thread, &xrt_kernel_ready_list);
 				  }
 			  }
 			  current = next_node;
@@ -151,6 +146,20 @@ void xrt_kernel_check_sleeping_threads(void){
 		xrt_port_request_context_switch();
 	}
 	 xrt_kernel_exit_critical(old_prio);
+}
+
+void xrt_kernel_reorder_thread(TCB_t* thread){
+	xrt_kernel_move_thread(thread, thread->currently_located_list);
+}
+
+void xrt_kernel_move_thread(TCB_t* thread, cdll_list* dst){
+	if(dst == NULL || thread == NULL){
+		return;
+	}
+
+	cdll_remove_known_node_from_list(thread -> currently_located_list, thread -> thread_node);
+	cdll_push_data_with_priority_order(dst, thread -> thread_node);
+	thread -> currently_located_list = dst;
 }
 
 void xrt_kernel_wake_thread(TCB_t* thread){

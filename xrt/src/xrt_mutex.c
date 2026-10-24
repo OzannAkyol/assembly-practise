@@ -45,8 +45,7 @@ void xrt_mutex_lock_from_svc(xrt_mutex_t* mutex_ptr, TCB_t* running_thread){
 			//find the where owner located.
 			cdll_list* located_list = mutex_ptr -> mutex_owner -> currently_located_list;
 			if(located_list != &xrt_kernel_stopped_list){
-				cdll_remove_known_node_from_list(located_list, mutex_ptr -> mutex_owner -> thread_node);
-				cdll_push_data_with_priority_order(located_list, mutex_ptr -> mutex_owner -> thread_node);
+				xrt_kernel_reorder_thread(mutex_ptr -> mutex_owner);
 			}
 		}
 		xrt_kernel_block_thread(running_thread, &mutex_ptr->waiting_list, XRT_THREAD_BLOCK_MUTEX);

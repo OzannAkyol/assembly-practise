@@ -19,6 +19,8 @@ bool xrt_kernel_start(void);
 void xrt_kernel_check_sleeping_threads(void);
 void xrt_kernel_wake_thread(TCB_t* thread);
 void xrt_kernel_block_thread(TCB_t* thread, cdll_list* wait_list, ThreadBlockedReason_t reason);
+void xrt_kernel_move_thread(TCB_t* thread, cdll_list* dst);
+void xrt_kernel_reorder_thread(TCB_t* thread);
 
 __STATIC_FORCEINLINE uint32_t xrt_kernel_enter_critical(void){
 	return xrt_port_enter_critical();
