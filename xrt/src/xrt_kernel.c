@@ -106,11 +106,11 @@ void xrt_kernel_schedule(void){
 
 	if(running_thread -> state == THREAD_BLOCKED_STATE){
 		//state, blocked reason and currently_located_list are set by the SVC handler
-		cdll_push_data_with_priority_order(running_thread -> currently_located_list, running_thread -> thread_node);
+		xrt_kernel_push_thread_by_priority(running_thread -> currently_located_list, running_thread);
 	}
 	else{
 		running_thread -> state = THREAD_READY_STATE;
-		cdll_push_data_with_priority_order(&xrt_kernel_ready_list, running_thread -> thread_node);
+		xrt_kernel_push_thread_by_priority(&xrt_kernel_ready_list, running_thread);
 		running_thread -> currently_located_list = &xrt_kernel_ready_list;
 	}
 
@@ -158,7 +158,7 @@ void xrt_kernel_move_thread(TCB_t* thread, cdll_list* dst){
 	}
 
 	cdll_remove_known_node_from_list(thread -> currently_located_list, thread -> thread_node);
-	cdll_push_data_with_priority_order(dst, thread -> thread_node);
+	xrt_kernel_push_thread_by_priority(dst, thread);
 	thread -> currently_located_list = dst;
 }
 
@@ -169,7 +169,7 @@ void xrt_kernel_wake_thread(TCB_t* thread){
 
     thread -> state = THREAD_READY_STATE;
     thread -> blocked_reason = XRT_BLOCK_NONE;
-    cdll_push_data_with_priority_order(&xrt_kernel_ready_list, thread->thread_node);
+    xrt_kernel_push_thread_by_priority(&xrt_kernel_ready_list, thread);
     thread -> currently_located_list = &xrt_kernel_ready_list;
 
     TCB_t* running_thread = (TCB_t*)xrt_kernel_running_list.head->data;
@@ -189,6 +189,32 @@ void xrt_kernel_block_thread(TCB_t* thread, cdll_list* wait_list, ThreadBlockedR
     thread -> currently_located_list = wait_list;
 
     xrt_port_request_context_switch();
+}
+
+bool xrt_kernel_push_thread_by_priority(cdll_list* list, TCB_t* thread){
+    if(list == NULL || thread == NULL){
+        return false;
+    }
+
+    cdll_node* current = cdll_get_list_head(list);
+
+    if(current == NULL){
+        return cdll_insert_node_to_tail(list, thread->thread_node);
+    }
+
+    uint8_t remaining = list->size;
+
+    while(remaining-- > 0){
+        TCB_t* existing = (TCB_t*)current->data;
+
+        if(existing->current_priority < thread->current_priority){
+            return cdll_insert_node_before(list, current, thread->thread_node);
+        }
+
+        current = current->next;
+    }
+
+    return cdll_insert_node_to_tail(list, thread->thread_node);
 }
 
 static void idle_exec_function(void){

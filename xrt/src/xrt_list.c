@@ -92,47 +92,22 @@ cdll_node* cdll_get_list_head(cdll_list* list){
 	return NULL;
 }
 
-/*
- *  @note: this function placed node according to it's priority order.
- *
- */
-bool cdll_push_data_with_priority_order(cdll_list* list, cdll_node* given_node){
-	if(list == NULL || given_node == NULL){
+bool cdll_insert_node_before(cdll_list* list, cdll_node* existing, cdll_node* new_node){
+	if(list == NULL || existing == NULL || new_node == NULL){
 		return false;
 	}
 
-	if(list -> head == NULL){
-		list -> head = given_node;
-		list -> head -> prev = given_node;
-		list -> head -> next = given_node;
-		cdll_increment_list_size(list);
-		return true;
-	}
+	new_node -> next = existing;
+	new_node -> prev = existing ->prev;
 
-	TCB_t* given_thread = (TCB_t*)given_node->data;
-	cdll_node* tmp_node = list -> head;
+	existing -> prev -> next =  new_node;
+	existing -> prev = new_node;
 
-	uint8_t size = list -> size;
-	while(size-- > 0){
-		TCB_t* tmp_thread = (TCB_t*) tmp_node -> data;
-
-		if(tmp_thread -> current_priority < given_thread -> current_priority){
-			given_node -> next = tmp_node;
-			given_node -> prev = tmp_node -> prev;
-
-			tmp_node -> prev -> next = given_node;
-			tmp_node -> prev = given_node;
-
-			if(tmp_node == list -> head){
-				list -> head = given_node;
+	if(existing == list -> head){
+		list -> head = new_node;
 			}
-			cdll_increment_list_size(list);
-			return true;
-		}
-		tmp_node = tmp_node -> next;
-	}
 
-	cdll_insert_node_to_tail(list, given_node);
+			cdll_increment_list_size(list);
 
 	return true;
 }

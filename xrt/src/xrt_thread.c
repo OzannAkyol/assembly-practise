@@ -65,7 +65,7 @@ bool xrt_thread_create(TCB_t*     tcb,
 
     xrt_thread_stack_frame_init(tcb);
 
-    if(!cdll_push_data_with_priority_order(&xrt_kernel_ready_list, tcb_node)){
+    if(!xrt_kernel_push_thread_by_priority(&xrt_kernel_ready_list, tcb)){
         tcb -> currently_located_list = NULL;
         return false;
     }
