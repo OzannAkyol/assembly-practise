@@ -10,7 +10,9 @@
 #include <stdint.h>
 
 #include "xrt_list.h"
-#include "xrt_thread.h"
+
+static void cdll_increment_list_size(cdll_list* list);
+static void cdll_decrement_list_size(cdll_list* list);
 
 bool cdll_init_list(cdll_list* list){
 	if(list == NULL){
@@ -110,4 +112,16 @@ bool cdll_insert_node_before(cdll_list* list, cdll_node* existing, cdll_node* ne
 			cdll_increment_list_size(list);
 
 	return true;
+}
+
+static void cdll_increment_list_size(cdll_list* list){
+	if(list != NULL){
+		list->size++;
+	}
+}
+
+static void cdll_decrement_list_size(cdll_list* list){
+	if(list != NULL){
+		list->size--;
+	}
 }
