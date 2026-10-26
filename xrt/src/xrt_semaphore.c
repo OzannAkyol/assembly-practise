@@ -12,7 +12,7 @@
 #include "xrt_system_calls.h"
 
 bool xrt_semaphore_init(xrt_semaphore_t* semaphore, uint16_t initial_value, uint16_t max_value){
-	if(semaphore == NULL || initial_value == 0 || max_value == 0){
+	if(semaphore == NULL || initial_value > max_value || max_value == 0){
 		return false;
 	}
     cdll_init_list(&semaphore -> waiting_list);
