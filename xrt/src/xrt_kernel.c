@@ -40,6 +40,7 @@ TCB_List_t xrt_kernel_stopped_list ={
 
 static void idle_exec_function(void);
 static bool xrt_kernel_list_init(cdll_list* list);
+static void xrt_kernel_move_thread(TCB_t* thread, cdll_list* dst);
 
 static bool xrt_kernel_list_init(cdll_list* list){
     if(!cdll_init_list(list)){
@@ -152,7 +153,7 @@ void xrt_kernel_reorder_thread(TCB_t* thread){
 	xrt_kernel_move_thread(thread, thread->currently_located_list);
 }
 
-void xrt_kernel_move_thread(TCB_t* thread, cdll_list* dst){
+static void xrt_kernel_move_thread(TCB_t* thread, cdll_list* dst){
 	if(dst == NULL || thread == NULL){
 		return;
 	}
