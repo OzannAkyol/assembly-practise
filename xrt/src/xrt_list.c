@@ -6,7 +6,6 @@
  */
 
 #include <stddef.h>
-#include <stdlib.h>
 #include <stdint.h>
 
 #include "xrt_list.h"
@@ -29,6 +28,8 @@ void cdll_remove_known_node_from_list(cdll_list* list, cdll_node* node){
 	if(list -> size == 1){
 		list -> size = 0;
 		list -> head = NULL;
+		node -> next = node;
+		node -> prev = node;
 	}
 	else{
 		node -> next -> prev = node -> prev;
@@ -107,9 +108,9 @@ bool cdll_insert_node_before(cdll_list* list, cdll_node* existing, cdll_node* ne
 
 	if(existing == list -> head){
 		list -> head = new_node;
-			}
+	}
 
-			cdll_increment_list_size(list);
+	cdll_increment_list_size(list);
 
 	return true;
 }
