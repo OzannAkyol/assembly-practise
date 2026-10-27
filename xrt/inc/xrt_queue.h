@@ -24,8 +24,8 @@ typedef struct{
 }xrt_queue_t;
 
 bool xrt_queue_init(xrt_queue_t* queue);
-bool xrt_queue_send(xrt_queue_t* queue, void* data);
 bool xrt_queue_receive(xrt_queue_t* queue, void* data);
+bool xrt_queue_send(xrt_queue_t* queue, void* data);
 bool xrt_queue_send_from_ISR(xrt_queue_t* queue, void* data);
 
 #endif /* INC_XRT_QUEUE_H_ */

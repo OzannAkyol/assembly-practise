@@ -35,30 +35,13 @@ bool xrt_queue_init(xrt_queue_t* queue){
 	queue -> write_ptr = queue -> queue_data;
 	queue -> read_ptr = queue -> queue_data;
 
-	xrt_semaphore_init(queue -> write_access_sem, block_count, block_count);
-	xrt_semaphore_init(queue -> read_access_sem, XRT_QUEUE_NOT_AVAILABLE_AT_STARTUP, block_count);
-
-	return true;
-}
-
-bool xrt_queue_send(xrt_queue_t* queue, void* data){
-	if(queue == NULL || data == NULL){
+	if(!xrt_semaphore_init(queue -> write_access_sem, block_count, block_count)){
 		return false;
 	}
 
-	xrt_semaphore_take(queue -> write_access_sem);
-	uint32_t old_prio = xrt_kernel_enter_critical();
-
-	memcpy(queue -> write_ptr, data, queue-> block_size);
-	queue -> write_ptr += queue-> block_size;
-
-	if(queue -> write_ptr == queue-> queue_data + queue-> queue_capacity){
-		queue -> write_ptr = queue-> queue_data;
+	if(!xrt_semaphore_init(queue -> read_access_sem, XRT_QUEUE_NOT_AVAILABLE_AT_STARTUP, block_count)){
+		return false;
 	}
-
-	xrt_kernel_exit_critical(old_prio);
-
-	xrt_semaphore_release(queue -> read_access_sem);
 
 	return true;
 }
@@ -81,6 +64,28 @@ bool xrt_queue_receive(xrt_queue_t* queue, void* data){
 
 	xrt_kernel_exit_critical(old_prio);
 	xrt_semaphore_release(queue -> write_access_sem);
+
+	return true;
+}
+
+bool xrt_queue_send(xrt_queue_t* queue, void* data){
+	if(queue == NULL || data == NULL){
+		return false;
+	}
+
+	xrt_semaphore_take(queue -> write_access_sem);
+	uint32_t old_prio = xrt_kernel_enter_critical();
+
+	memcpy(queue -> write_ptr, data, queue-> block_size);
+	queue -> write_ptr += queue-> block_size;
+
+	if(queue -> write_ptr == queue-> queue_data + queue-> queue_capacity){
+		queue -> write_ptr = queue-> queue_data;
+	}
+
+	xrt_kernel_exit_critical(old_prio);
+
+	xrt_semaphore_release(queue -> read_access_sem);
 
 	return true;
 }
