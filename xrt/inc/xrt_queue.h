@@ -8,10 +8,7 @@
 #ifndef INC_XRT_QUEUE_H_
 #define INC_XRT_QUEUE_H_
 
-#include "xrt_list.h"
 #include "xrt_semaphore.h"
-
-typedef cdll_list xrt_queue_list;
 
 typedef struct{
 	uint8_t* queue_data;
