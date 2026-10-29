@@ -9,9 +9,9 @@
 #define INC_XRT_MUTEX_H_
 
 #include "xrt_thread.h"
+#include "xrt_list.h"
 
 typedef cdll_list	mutex_list;
-typedef cdll_node	mutex_node;
 
 typedef struct{
 	TCB_t* mutex_owner; // it should points to thread TCB,

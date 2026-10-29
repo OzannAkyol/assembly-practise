@@ -7,11 +7,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "xrt_list.h"
 #include "xrt_mutex.h"
 #include "xrt_kernel.h"
 #include "xrt_kernel_internal.h"
-#include "xrt_port.h"
 #include "xrt_system_calls.h"
 
 bool xrt_mutex_init(xrt_mutex_t* mutex_obj){
@@ -63,10 +61,9 @@ void xrt_mutex_unlock_from_svc(xrt_mutex_t* mutex_ptr, TCB_t* running_thread){
 
 		if(mutex_ptr-> waiting_list.head != NULL){
 			TCB_t* removed_thread = mutex_ptr-> waiting_list.head -> data;
-
 			cdll_remove_known_node_from_list(&mutex_ptr-> waiting_list, removed_thread -> thread_node);
-			xrt_kernel_wake_thread(removed_thread);
 
+			xrt_kernel_wake_thread(removed_thread);
 			mutex_ptr -> mutex_owner = removed_thread;
 		}
 		else{
