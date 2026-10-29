@@ -11,8 +11,6 @@
 #include <stdint.h>
 #include "xrt_list.h"
 
-typedef cdll_list TCB_List_t;
-
 typedef enum{
 	IDLE_PRIORITY,
     LOW_PRIORITY,
@@ -55,7 +53,7 @@ typedef struct{
     ThreadState_t state;
     ThreadBlockedReason_t blocked_reason;
     uint32_t wake_tick;
-    TCB_List_t* currently_located_list;
+    cdll_list* currently_located_list;
     cdll_node* thread_node;	//embed the node information to tcb Since decrease the code complexity.
 }TCB_t;
 

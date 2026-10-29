@@ -8,13 +8,13 @@
 #ifndef INC_XRT_KERNEL_INTERNAL_H_
 #define INC_XRT_KERNEL_INTERNAL_H_
 
-#include "xrt_thread.h"
+#include "xrt_kernel.h"
 
 extern volatile bool is_os_first_cs_occurs;
 
-extern TCB_List_t xrt_kernel_ready_list;
-extern TCB_List_t xrt_kernel_running_list;
-extern TCB_List_t xrt_kernel_stopped_list;
+extern cdll_list xrt_kernel_ready_list;
+extern cdll_list xrt_kernel_running_list;
+extern cdll_list xrt_kernel_stopped_list;
 
 void xrt_kernel_schedule(void);
 
