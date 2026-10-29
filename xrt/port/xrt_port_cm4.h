@@ -8,11 +8,18 @@
 #ifndef INC_XRT_PORT_CM4_H_
 #define INC_XRT_PORT_CM4_H_
 #include <stdint.h>
-#include "cmsis_gcc.h"
-#include "stm32f407xx.h"
 
-#define KERNEL_BASEPRIO_THRESHOLD		(5u)
-#define KERNEL_BASEPRI  (KERNEL_BASEPRIO_THRESHOLD << (8U - __NVIC_PRIO_BITS))   // 5 << 4 = 0x50
+#ifndef XRT_PORT_DEVICE_HEADER
+#error "XRT_PORT_DEVICE_HEADER must be defined (e.g. XRT_PORT_DEVICE_HEADER="stm32f407xx.h")"
+#endif
+
+#include XRT_PORT_DEVICE_HEADER
+#include "xrt_config.h"
+
+#define KERNEL_BASEPRI  (XRT_MAX_KERNEL_API_INTERRUPT_PRIORITY << (8U - XRT_PORT_PRIO_BITS))
+
+_Static_assert(XRT_PORT_PRIO_BITS == __NVIC_PRIO_BITS,
+               "XRT_PORT_PRIO_BITS does not match the device's __NVIC_PRIO_BITS");
 
 __attribute__((naked))void xrt_thread_store_context(void);
 __attribute__((naked))void xrt_load_context(void);

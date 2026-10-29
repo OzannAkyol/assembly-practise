@@ -124,7 +124,7 @@ void SVC_Handler(void)
 }
 
 void xrt_port_set_os_priority_order(void){
-    NVIC_SetPriority(SVCall_IRQn, 15);
-    NVIC_SetPriority(PendSV_IRQn, 15);
-    NVIC_SetPriority(SysTick_IRQn, 14);
+    NVIC_SetPriority(SVCall_IRQn, XRT_PORT_SVCALL_PRIORITY);
+    NVIC_SetPriority(PendSV_IRQn, XRT_PORT_PENDSV_PRIORITY);
+    NVIC_SetPriority(SysTick_IRQn, XRT_PORT_SYSTICK_PRIORITY);
 }

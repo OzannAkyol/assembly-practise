@@ -13,9 +13,9 @@
 
 #include "xrt_mutex.h"
 #include "xrt_semaphore.h"
+#include "xrt_config.h"
 
-#define IDLE_THREAD_STACK_SIZE		(64u)
-__attribute__((aligned(8))) static uint32_t idle_stack[IDLE_THREAD_STACK_SIZE];
+__attribute__((aligned(8))) static uint32_t idle_stack[XRT_IDLE_THREAD_STACK_SIZE_IN_WORD];
 
 static volatile bool is_os_kernel_started = false;
 volatile bool is_os_first_cs_occurs = false;
@@ -60,7 +60,7 @@ bool xrt_kernel_init(void){
 	if(!xrt_kernel_list_init(&xrt_kernel_ready_list)){
 		return false;
 	}
-	if(!xrt_thread_create(&idle_tcb, &idle_node, idle_exec_function, IDLE_PRIORITY, idle_stack, IDLE_THREAD_STACK_SIZE)){
+	if(!xrt_thread_create(&idle_tcb, &idle_node, idle_exec_function, IDLE_PRIORITY, idle_stack, XRT_IDLE_THREAD_STACK_SIZE_IN_WORD)){
 		return false;
 	}
 	xrt_port_set_os_priority_order();
