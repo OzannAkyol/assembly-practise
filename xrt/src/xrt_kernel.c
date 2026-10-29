@@ -23,17 +23,17 @@ volatile bool is_os_first_cs_occurs = false;
 static cdll_node idle_node;
 static TCB_t idle_tcb;
 
-TCB_List_t xrt_kernel_ready_list={
+cdll_list xrt_kernel_ready_list={
 		.head = NULL,
 		.size = 0,
 };
 
-TCB_List_t xrt_kernel_running_list ={
+cdll_list xrt_kernel_running_list ={
 		.head = NULL,
 		.size = 0,
 };
 
-TCB_List_t xrt_kernel_stopped_list ={
+cdll_list xrt_kernel_stopped_list ={
 		.head = NULL,
 		.size = 0,
 };
