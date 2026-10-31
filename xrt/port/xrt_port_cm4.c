@@ -96,8 +96,6 @@ __attribute__((naked)) void PendSV_Handler(void)
     __asm("bl xrt_kernel_schedule");
     __asm("bl xrt_load_context");
 
-    __asm("PendSV_Handler_exit:");
-
     __asm("mov r0, #0");
 	__asm("msr basepri, r0");
 

@@ -12,7 +12,6 @@
 #include "xrt_thread.h"
 
 typedef cdll_list xrt_semaphore_list;
-typedef cdll_node xrts_semaphore_node;
 
 typedef struct{
     uint16_t semaphore_value;
