@@ -19,21 +19,6 @@ typedef enum{
 	SYS_CALL_OS_DELAY,
 }SystemCalls_t;
 
-#define XRT_SYSCALL_WITH_ARG(svc_number, arg)                   \
-    do {                                                        \
-        register uint32_t r0 __asm("r0") = (uint32_t)(arg);     \
-        __asm volatile("svc %[svc_num]"                         \
-                       :                                        \
-                       : [svc_num] "I" (svc_number), "r" (r0)   \
-                       : "memory");                             \
-    } while(0)
-
-#define XRT_SYSCALL_NO_ARG(svc_number)                          \
-    __asm volatile("svc %[svc_num]"                             \
-                   :                                            \
-                   : [svc_num] "I" (svc_number)                 \
-                   : "memory")
-
 void xrt_system_calls_dispatch(uint8_t svc_number, uint32_t svc_arg);
 
 #endif /* INC_XRT_SYSTEM_CALLS_H_ */

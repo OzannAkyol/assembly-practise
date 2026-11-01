@@ -39,4 +39,19 @@ __STATIC_FORCEINLINE void xrt_port_request_context_switch(void){
 	SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
 }
 
+#define XRT_SYSCALL_WITH_ARG(svc_number, arg)                   \
+    do {                                                        \
+        register uint32_t r0 __asm("r0") = (uint32_t)(arg);     \
+        __asm volatile("svc %[svc_num]"                         \
+                       :                                        \
+                       : [svc_num] "I" (svc_number), "r" (r0)   \
+                       : "memory");                             \
+    } while(0)
+
+#define XRT_SYSCALL_NO_ARG(svc_number)                          \
+    __asm volatile("svc %[svc_num]"                             \
+                   :                                            \
+                   : [svc_num] "I" (svc_number)                 \
+                   : "memory")
+                   
 #endif /* INC_XRT_PORT_CM4_H_ */
