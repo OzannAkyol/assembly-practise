@@ -220,6 +220,6 @@ bool xrt_kernel_push_thread_by_priority(cdll_list* list, TCB_t* thread){
 
 static void idle_exec_function(void){
 	while(1){
-		__NOP();
+		;;
 	}
 }
