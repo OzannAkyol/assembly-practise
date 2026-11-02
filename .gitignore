@@ -416,3 +416,23 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# xrt build output
+build*/
+
+# CubeIDE build output
+Debug/
+Release/
+*.o
+*.d
+*.su
+*.cyclo
+*.map
+*.elf
+*.list
+*.bin
+*.hex
+
+# Eclipse / CubeIDE workspace
+.settings/
+.metadata/
