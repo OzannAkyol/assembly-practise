@@ -22,11 +22,11 @@ void xrt_kernel_block_thread(TCB_t* thread, cdll_list* wait_list, ThreadBlockedR
 void xrt_kernel_reorder_thread(TCB_t* thread);
 bool xrt_kernel_push_thread_by_priority(cdll_list* list, TCB_t* thread);
 
-__STATIC_FORCEINLINE uint32_t xrt_kernel_enter_critical(void){
+static inline uint32_t xrt_kernel_enter_critical(void){
 	return xrt_port_enter_critical();
 }
 
-__STATIC_FORCEINLINE void xrt_kernel_exit_critical(uint32_t old){
+static inline void xrt_kernel_exit_critical(uint32_t old){
 	xrt_port_exit_critical(old);
 }
 #endif /* INC_XRT_KERNEL_H_ */
