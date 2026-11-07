@@ -1,8 +1,7 @@
-/*
- * xrt_port.h
+/**
+ * @file    xrt_port.h
+ * @brief   Selects the port implementation for the target being built.
  *
- *  Created on: Sep 2, 2026
- *      Author: ozi
  */
 
 #ifndef INC_XRT_PORT_H_
@@ -15,7 +14,5 @@
 #else
 #error "No port selected: define XRT_PORT_CM4 or XRT_PORT_HOST"
 #endif
-
-
 
 #endif /* INC_XRT_PORT_H_ */
