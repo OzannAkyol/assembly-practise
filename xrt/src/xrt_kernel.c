@@ -132,8 +132,7 @@ void xrt_kernel_check_sleeping_threads(void){
 			  TCB_t* blocked_thread = (TCB_t*)current->data;
 
 			  if(blocked_thread->blocked_reason == XRT_THREAD_OS_DELAY){
-				  blocked_thread->wake_tick--;
-				  if(blocked_thread->wake_tick == 0){
+				  if(blocked_thread->wake_tick > 0 && --blocked_thread->wake_tick == 0){
 					  blocked_thread->blocked_reason = XRT_BLOCK_NONE;
 					  blocked_thread->state = THREAD_READY_STATE;
 
