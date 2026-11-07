@@ -9,6 +9,7 @@
 #include "xrt_semaphore.h"
 #include "xrt_kernel.h"
 #include "xrt_kernel_internal.h"
+#include "xrt_syscalls_internal.h"
 #include "xrt_system_calls.h"
 
 bool xrt_semaphore_init(xrt_semaphore_t* semaphore, uint16_t initial_value, uint16_t max_value){

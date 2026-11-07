@@ -10,6 +10,7 @@
 #include "xrt_mutex.h"
 #include "xrt_kernel.h"
 #include "xrt_kernel_internal.h"
+#include "xrt_syscalls_internal.h"
 #include "xrt_system_calls.h"
 
 bool xrt_mutex_init(xrt_mutex_t* mutex_obj){

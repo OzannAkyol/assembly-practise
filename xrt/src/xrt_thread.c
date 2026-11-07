@@ -12,6 +12,7 @@
 #include "xrt_config.h"
 #include "xrt_system_calls.h"
 #include "xrt_kernel_internal.h"
+#include "xrt_syscalls_internal.h"
 #include "xrt_kernel.h"
 
 #define XRT_THREAD_MIN_STACK_WORDS      (32u)   /* HW frame(8) + SW frame(8) + nested exception margin */

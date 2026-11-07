@@ -6,6 +6,7 @@
  */
 
 #include "xrt_system_calls.h"
+#include "xrt_syscalls_internal.h"
 #include "xrt_kernel.h"
 #include "xrt_kernel_internal.h"
 #include "xrt_mutex.h"

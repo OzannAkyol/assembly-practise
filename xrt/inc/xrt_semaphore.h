@@ -26,7 +26,4 @@ void xrt_semaphore_release_from_ISR(xrt_semaphore_t* semaphore_p);
 void xrt_semaphore_signal_locked(xrt_semaphore_t* semaphore_p);
 bool xrt_semaphore_try_take_locked(xrt_semaphore_t* semaphore);
 
-void xrt_semaphore_take_from_svc(xrt_semaphore_t* semaphore, TCB_t* running_thread);
-void xrt_semaphore_release_from_svc(xrt_semaphore_t* semaphore);
-
 #endif /* INC_XRT_SEMAPHORE_H_ */
