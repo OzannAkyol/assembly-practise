@@ -81,12 +81,12 @@ void xrt_thread_yield(void){
 	XRT_SYSCALL_NO_ARG(SYS_CALL_THREAD_YIELD);
 }
 
-void xrt_thread_delay(uint32_t ms){
-    if(ms == 0u){
+void xrt_thread_delay(uint32_t tick){
+    if(tick == 0u){
         xrt_thread_yield();
     }
     else{
-        XRT_SYSCALL_WITH_ARG(SYS_CALL_OS_DELAY, ms);
+        XRT_SYSCALL_WITH_ARG(SYS_CALL_OS_DELAY, tick);
     }
 }
 
