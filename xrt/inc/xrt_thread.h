@@ -20,16 +20,6 @@ typedef enum{
 }Priority_t;
 
 typedef enum{
-    THREAD_ID_IDLE,
-    THREAD_ID_1,
-    THREAD_ID_2,
-    THREAD_ID_3,
-    THREAD_ID_4,
-    THREAD_ID_5,
-    MAX_NUM_OF_THREAD
-}ThreadId_t;
-
-typedef enum{
     THREAD_READY_STATE,
     THREAD_RUNNING_STATE,
     THREAD_BLOCKED_STATE,
@@ -43,7 +33,7 @@ typedef enum{
 }ThreadBlockedReason_t;
 
 typedef struct{
-    ThreadId_t thread_id;
+    uint8_t thread_id;
     uint32_t* thread_sp;
     uint32_t* thread_base_ptr;
     uint32_t thread_stack_size_word;

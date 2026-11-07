@@ -9,6 +9,7 @@
 #include <stdbool.h>
 
 #include "xrt_thread.h"
+#include "xrt_config.h"
 #include "xrt_system_calls.h"
 #include "xrt_kernel_internal.h"
 #include "xrt_kernel.h"
@@ -16,7 +17,7 @@
 #define XRT_THREAD_MIN_STACK_WORDS      (32u)   /* HW frame(8) + SW frame(8) + nested exception margin */
 #define XRT_STACK_ALIGNMENT_IN_BYTE     (8u)    /* AAPCS / exception frame requirement */
 
-static ThreadId_t next_thread_id = THREAD_ID_IDLE;
+static uint8_t next_thread_id = 0; // start from idle
 
 static void xrt_thread_stack_frame_init(TCB_t* node);
 
@@ -36,7 +37,7 @@ bool xrt_thread_create(TCB_t*     tcb,
     if(stack_size_in_word < XRT_THREAD_MIN_STACK_WORDS){
         return false;
     }
-    if(next_thread_id >= MAX_NUM_OF_THREAD){
+    if(next_thread_id >= XRT_MAX_NUM_OF_THREAD){
         return false;
     }
 

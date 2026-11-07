@@ -31,7 +31,7 @@
 /* ---- Kernel ----------------------------------------------------------- */
 
 #define XRT_IDLE_THREAD_STACK_SIZE_IN_WORD      (64u)
-
+#define XRT_MAX_NUM_OF_THREAD   				(8u)
 /* ---- Invariants ------------------------------------------------------- */
 
 /*
