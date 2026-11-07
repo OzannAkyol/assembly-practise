@@ -25,6 +25,10 @@ bool cdll_init_list(cdll_list* list){
 }
 
 bool cdll_insert_node_to_tail(cdll_list* list, cdll_node* node){
+	if(list == NULL || node == NULL){
+		return false;
+	}
+
 	if(list-> head == NULL){
 		list-> head = node;
 		node-> prev = node;
@@ -98,6 +102,8 @@ static void cdll_increment_list_size(cdll_list* list){
 
 static void cdll_decrement_list_size(cdll_list* list){
 	if(list != NULL){
-		list->size--;
+		if(list->size > 0){
+			list->size--;
+		}
 	}
 }
