@@ -208,7 +208,7 @@ bool xrt_kernel_push_thread_by_priority(cdll_list* list, TCB_t* thread){
         TCB_t* existing = (TCB_t*)current->data;
 
         if(existing->current_priority < thread->current_priority){
-            return cdll_insert_node_before(list, current, thread->thread_node);
+            return cdll_insert_node_before(list, existing, thread->thread_node);
         }
 
         current = current->next;
