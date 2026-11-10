@@ -96,6 +96,8 @@ __STATIC_FORCEINLINE void xrt_port_request_context_switch(void){
 
 /** @brief Raises a syscall that carries no argument. */
 #define XRT_SYSCALL_NO_ARG(svc_number)                          \
-    __asm volatile("svc %[svc_num]"                             \
-                   :                                            \
-                   : [svc_num] "I" (svc_number)                 \
+        __asm volatile("svc %[svc_num]"                         \
+                      :                                         \
+                      : [svc_num] "I" (svc_number)              \
+                      : "memory")
+#endif /* INC_XRT_PORT_CM4_H */
