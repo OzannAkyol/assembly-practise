@@ -7,70 +7,52 @@
 #include "xrt_app.h"
 #include "xrt_thread.h"
 #include "xrt_kernel.h"
-#include "xrt_semaphore.h"
+#include "xrt_mutex.h"
 #include "main.h"
 
-#define THREAD1_STACK_SIZE		128
-__attribute__((aligned(8)))static uint32_t thread1_stack[THREAD1_STACK_SIZE];
+#define THREAD_STACK_SIZE   (128u)
 
-#define THREAD2_STACK_SIZE		128
-__attribute__((aligned(8)))static uint32_t thread2_stack[THREAD2_STACK_SIZE];
-
-#define THREAD3_STACK_SIZE		128
-__attribute__((aligned(8)))static uint32_t thread3_stack[THREAD3_STACK_SIZE];
-
-#define THREAD4_STACK_SIZE		128
-__attribute__((aligned(8)))static uint32_t thread4_stack[THREAD4_STACK_SIZE];
-
-#define THREAD5_STACK_SIZE		128
-__attribute__((aligned(8))) static uint32_t thread5_stack[THREAD5_STACK_SIZE];
+__attribute__((aligned(8))) static uint32_t thread1_stack[THREAD_STACK_SIZE];
+__attribute__((aligned(8))) static uint32_t thread2_stack[THREAD_STACK_SIZE];
+__attribute__((aligned(8))) static uint32_t thread3_stack[THREAD_STACK_SIZE];
 
 static cdll_node thread1_node;
-static TCB_t tcb1;
+static TCB_t     tcb1;
 
 static cdll_node thread2_node;
-static TCB_t tcb2;
+static TCB_t     tcb2;
 
 static cdll_node thread3_node;
-static TCB_t tcb3;
+static TCB_t     tcb3;
 
-static cdll_node thread4_node;
-static TCB_t tcb4;
-
-static cdll_node thread5_node;
-static TCB_t tcb5;
-
-#define BINARY_SEMAPHORE_MAX_VALUE			(1u)
-#define BINARY_SEMAPHORE_START_UP_VALUE		(0u)
-
-xrt_semaphore_t semaphore1;
+static xrt_mutex_t mutex1;
+static xrt_mutex_t mutex2;
 
 static void thread1_exec_function(void);
 static void thread2_exec_function(void);
 static void thread3_exec_function(void);
-static void thread4_exec_function(void);
-static void thread5_exec_function(void);
 
 bool xrt_app_init(void){
 
-	if(!xrt_thread_create(&tcb1, &thread1_node, thread1_exec_function, MEDIUM_PRIORITY, thread1_stack, THREAD1_STACK_SIZE)){
+	if(!xrt_thread_create(&tcb1, &thread1_node, thread1_exec_function,
+	                      HIGH_PRIORITY, thread1_stack, THREAD_STACK_SIZE)){
 		return false;
 	}
-	if(!xrt_thread_create(&tcb2, &thread2_node, thread2_exec_function, MEDIUM_PRIORITY, thread2_stack, THREAD2_STACK_SIZE)){
+	if(!xrt_thread_create(&tcb2, &thread2_node, thread2_exec_function,
+	                      MEDIUM_PRIORITY, thread2_stack, THREAD_STACK_SIZE)){
 		return false;
 	}
-	if(!xrt_thread_create(&tcb3, &thread3_node, thread3_exec_function, MEDIUM_PRIORITY, thread3_stack, THREAD3_STACK_SIZE)){
-		return false;
-	}
-	if(!xrt_thread_create(&tcb4, &thread4_node, thread4_exec_function, MEDIUM_PRIORITY, thread4_stack, THREAD4_STACK_SIZE)){
-		return false;
-	}
-
-	if(!xrt_thread_create(&tcb5, &thread5_node, thread5_exec_function, MEDIUM_PRIORITY, thread5_stack, THREAD5_STACK_SIZE)){
+	if(!xrt_thread_create(&tcb3, &thread3_node, thread3_exec_function,
+	                      LOW_PRIORITY, thread3_stack, THREAD_STACK_SIZE)){
 		return false;
 	}
 
-	xrt_semaphore_init(&semaphore1, BINARY_SEMAPHORE_START_UP_VALUE, BINARY_SEMAPHORE_MAX_VALUE);
+	if(!xrt_mutex_init(&mutex1)){
+		return false;
+	}
+	if(!xrt_mutex_init(&mutex2)){
+		return false;
+	}
 
 	return true;
 }
@@ -79,87 +61,50 @@ void xrt_app_start(void){
 	xrt_kernel_start();
 }
 
+/*
+ * Stepped restore scenario.
+ *
+ * thread3 (low)    holds mutex1 and mutex2 across a sleep
+ * thread1 (high)   queues on mutex1
+ * thread2 (medium) queues on mutex2
+ *
+ * While both are queued thread3 runs at high. Releasing mutex1 should leave
+ * it at medium, because mutex2 still owes a medium waiter. Releasing mutex2
+ * should take it back to low.
+ */
+
 static void thread1_exec_function(void){
-	int a = 5;
-	int b = 10;
-
-	(void)a;
-	(void)b;
-
 	while(1){
-		HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(LD6_GPIO_Port, LD6_Pin, GPIO_PIN_RESET);
 		xrt_thread_delay(1000);
+
+		xrt_mutex_lock(&mutex1);
+		xrt_mutex_unlock(&mutex1);
 	}
 }
 
 static void thread2_exec_function(void){
-	int a = 5;
-	int b = 20;
-
-	(void)a;
-	(void)b;
-
 	while(1){
-		HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, GPIO_PIN_SET);
+		xrt_thread_delay(200);
 
-		HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(LD6_GPIO_Port, LD6_Pin, GPIO_PIN_RESET);
-		xrt_thread_delay(1000);
+		xrt_mutex_lock(&mutex2);
+		xrt_mutex_unlock(&mutex2);
 	}
 }
 
 static void thread3_exec_function(void){
-	int a = 5;
-	int b = 20;
-
-	(void)a;
-	(void)b;
-
-
 	while(1){
-		HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, GPIO_PIN_SET);
+		xrt_mutex_lock(&mutex1);
+		xrt_mutex_lock(&mutex2);
 
-		HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(LD6_GPIO_Port, LD6_Pin, GPIO_PIN_RESET);
+		/* both waiters queue up here, and thread3 is lifted to high */
 		xrt_thread_delay(1000);
-	}
-}
 
-static void thread4_exec_function(void){
-	int a = 5;
-	int b = 20;
+		xrt_mutex_unlock(&mutex1);
+		/* breakpoint here: tcb3.current_priority should read medium */
 
-	(void)a;
-	(void)b;
+		xrt_mutex_unlock(&mutex2);
+		/* breakpoint here: tcb3.current_priority should read low */
 
-	while(1){
-		HAL_GPIO_WritePin(LD6_GPIO_Port, LD6_Pin, GPIO_PIN_SET);
-
-		HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, GPIO_PIN_RESET);
-		xrt_thread_delay(1000);
-	}
-}
-
-static void thread5_exec_function(void){
-	int a = 5;
-	int b = 20;
-
-	(void)a;
-	(void)b;
-
-	while(1){
-		HAL_GPIO_WritePin(LD4_GPIO_Port, LD6_Pin, GPIO_PIN_SET);
-
-		HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(LD6_GPIO_Port, LD4_Pin, GPIO_PIN_RESET);
-		xrt_thread_delay(1000);
+		xrt_thread_delay(2000);
 	}
 }

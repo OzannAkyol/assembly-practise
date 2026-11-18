@@ -65,6 +65,12 @@ bool xrt_thread_create(TCB_t*     tcb,
     tcb_node -> next = tcb_node;
     tcb_node -> prev = tcb_node;
 
+    tcb->mutex_blocked_on = NULL;
+
+    if (!cdll_init_list(&tcb->mutex_held)) {
+        return false;
+    }
+
     xrt_thread_stack_frame_init(tcb);
 
     if(!xrt_kernel_push_thread_by_priority(&xrt_kernel_ready_list, tcb)){
@@ -78,7 +84,7 @@ bool xrt_thread_create(TCB_t*     tcb,
 }
 
 void xrt_thread_yield(void){
-	XRT_SYSCALL_NO_ARG(SYS_CALL_THREAD_YIELD);
+    XRT_SYSCALL_NO_ARG(SYS_CALL_THREAD_YIELD);
 }
 
 void xrt_thread_delay(uint32_t tick){

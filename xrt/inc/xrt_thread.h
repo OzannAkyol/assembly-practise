@@ -13,6 +13,8 @@
 #include <stdint.h>
 #include "xrt_list.h"
 
+typedef struct xrt_mutex_t xrt_mutex_t;
+
 /** @brief Scheduling priority. A higher enum value is a higher priority. */
 typedef enum{
     IDLE_PRIORITY,          /**< Reserved for the kernel's idle thread. */
@@ -64,7 +66,9 @@ typedef struct{
                                              not the one it still sits in. */
     cdll_node*  thread_node;            /**< This thread's list node; its data
                                              field points back at this TCB. */
-}TCB_t;
+    cdll_list   mutex_held;
+    xrt_mutex_t* mutex_blocked_on;
+} TCB_t;
 
 /**
  * @brief Registers a thread with the kernel and places it in the ready list.

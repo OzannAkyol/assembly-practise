@@ -23,9 +23,10 @@
 typedef cdll_list mutex_list;
 
 /** @brief Mutex object. Allocated by the application, filled in by init. */
-typedef struct{
+typedef struct xrt_mutex_t{
     TCB_t*     mutex_owner;  /**< Thread currently holding the lock, NULL when free. */
     mutex_list waiting_list; /**< Blocked threads, highest priority first. */
+    cdll_node m_node;		 /**< m_node holds the mutex itself.It is used when priority inheritance needed.*/
 }xrt_mutex_t;
 
 /**
