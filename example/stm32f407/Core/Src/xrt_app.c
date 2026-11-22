@@ -74,6 +74,7 @@ void xrt_app_start(void){
  */
 
 static void thread1_exec_function(void){
+
 	while(1){
 		xrt_thread_delay(1000);
 
@@ -83,6 +84,9 @@ static void thread1_exec_function(void){
 }
 
 static void thread2_exec_function(void){
+	float a = 10.0f;
+	float b = 10.0f;
+	float c = a*b;
 	while(1){
 		xrt_thread_delay(200);
 
@@ -92,6 +96,9 @@ static void thread2_exec_function(void){
 }
 
 static void thread3_exec_function(void){
+	float a = 10.0f;
+	float b = 10.0f;
+	float c = a*b;
 	while(1){
 		xrt_mutex_lock(&mutex1);
 		xrt_mutex_lock(&mutex2);

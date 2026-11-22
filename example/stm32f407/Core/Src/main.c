@@ -6,12 +6,10 @@
 #include "xrt_semaphore.h"
 
 void SystemClock_Config(void);
+void MX_USB_HOST_Process(void);
 
 int main(void)
 {
-
-  FPU -> FPCCR &= ~(FPU_FPCCR_LSPEN_Msk | FPU_FPCCR_ASPEN_Msk);
-
   HAL_Init();
 
   SystemClock_Config();
