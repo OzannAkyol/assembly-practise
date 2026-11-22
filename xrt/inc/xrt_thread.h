@@ -66,9 +66,10 @@ typedef struct{
                                              not the one it still sits in. */
     cdll_node*  thread_node;            /**< This thread's list node; its data
                                              field points back at this TCB. */
-    cdll_list   mutex_held;
-    xrt_mutex_t* mutex_blocked_on;
-} TCB_t;
+    cdll_list mutex_held;
+    xrt_mutex_t*   mutex_blocked_on;
+    uint32_t EXC_RET_VAL;
+}TCB_t;
 
 /**
  * @brief Registers a thread with the kernel and places it in the ready list.
@@ -109,3 +110,4 @@ void xrt_thread_yield(void);
 void xrt_thread_delay(uint32_t tick);
 
 #endif /* INC_XRT_THREAD_H_ */
+

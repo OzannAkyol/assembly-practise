@@ -15,7 +15,7 @@
 #include "xrt_syscalls_internal.h"
 #include "xrt_kernel.h"
 
-#define XRT_THREAD_MIN_STACK_WORDS      (32u)   /* HW frame(8) + SW frame(8) + nested exception margin */
+#define XRT_THREAD_MIN_STACK_WORDS      (50u)
 #define XRT_STACK_ALIGNMENT_IN_BYTE     (8u)    /* AAPCS / exception frame requirement */
 
 static uint8_t next_thread_id = 0; // start from idle
@@ -65,10 +65,11 @@ bool xrt_thread_create(TCB_t*     tcb,
     tcb_node -> next = tcb_node;
     tcb_node -> prev = tcb_node;
 
-    tcb->mutex_blocked_on = NULL;
+    tcb -> mutex_blocked_on = NULL;
+    tcb -> EXC_RET_VAL = 0xFFFFFFFD;
 
-    if (!cdll_init_list(&tcb->mutex_held)) {
-        return false;
+    if(!cdll_init_list(&tcb -> mutex_held)){
+    	return false;
     }
 
     xrt_thread_stack_frame_init(tcb);
@@ -84,7 +85,7 @@ bool xrt_thread_create(TCB_t*     tcb,
 }
 
 void xrt_thread_yield(void){
-    XRT_SYSCALL_NO_ARG(SYS_CALL_THREAD_YIELD);
+	XRT_SYSCALL_NO_ARG(SYS_CALL_THREAD_YIELD);
 }
 
 void xrt_thread_delay(uint32_t tick){
@@ -107,7 +108,7 @@ static void xrt_thread_stack_frame_init(TCB_t* node){
     // HW Stack Frame
     *(--sp) = 0x01000000;            // xPSR
     *(--sp) = (uint32_t)node->fptr;  // PC (Thread running function)
-    *(--sp) = 0xFFFFFFFD;            // LR (EXC_RETURN value, FPU not used for now)
+	*(--sp) = (uint32_t)node->fptr;  // LR
     *(--sp) = 0;                     // R12
     *(--sp) = 0;                     // R3
     *(--sp) = 0;                     // R2
