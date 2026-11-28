@@ -65,7 +65,7 @@ bool xrt_thread_create(TCB_t*     tcb,
     tcb_node -> prev = tcb_node;
 
     tcb -> mutex_blocked_on = NULL;
-    tcb -> EXC_RET_VAL = 0xFFFFFFFD;
+    tcb -> exc_ret_val = 0xFFFFFFFD;
 
     if(!cdll_init_list(&tcb -> mutex_held)){
     	return false;

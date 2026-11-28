@@ -15,7 +15,7 @@
 
 _Static_assert(offsetof(TCB_t, thread_sp) == 4u,
                "xrt_port_armv7m.c reads thread_sp at TCB offset 4; the field moved");
-_Static_assert(offsetof(TCB_t, EXC_RET_VAL) == 48u,
+_Static_assert(offsetof(TCB_t, exc_ret_val) == 48u,
                "xrt_port_armv7m.c reads exc_return at TCB offset 48; the field moved");
 
 __attribute__((naked))void xrt_port_store_context(uint32_t arg){

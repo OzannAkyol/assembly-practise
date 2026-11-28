@@ -68,7 +68,7 @@ typedef struct{
                                              field points back at this TCB. */
     cdll_list mutex_held;
     xrt_mutex_t*   mutex_blocked_on;
-    uint32_t EXC_RET_VAL;
+    uint32_t exc_ret_val;
 }TCB_t;
 
 /**
