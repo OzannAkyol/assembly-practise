@@ -160,7 +160,7 @@ __attribute__((naked)) void PendSV_Handler(void)
     /* ──────── if(flag == true) ──────── */
     __asm("MOV     r2, #0");
     __asm("STRB    r2, [r3]");
-    __asm("bl xrt_load_context");
+    __asm("bl xrt_port_load_context");
 
     __asm("pop {r1, lr}");
     __asm("mov r1, #0");
