@@ -21,6 +21,8 @@
 #include XRT_PORT_DEVICE_HEADER
 #include "xrt_config.h"
 
+#include "xrt_thread.h"
+
 /**
  * @brief The configured threshold in the format BASEPRI expects.
  *
@@ -51,6 +53,8 @@ __attribute__((naked))uint32_t xrt_port_load_context(void);
  *
  */
 void xrt_port_set_os_priority_order(void);
+
+void xrt_port_init_stack_frame(TCB_t* node);;
 
 /**
  * @brief Raises BASEPRI to the kernel API threshold.

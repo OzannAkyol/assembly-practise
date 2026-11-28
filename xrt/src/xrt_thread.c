@@ -14,13 +14,12 @@
 #include "xrt_kernel_internal.h"
 #include "xrt_syscalls_internal.h"
 #include "xrt_kernel.h"
+#include "xrt_port.h"
 
 #define XRT_THREAD_MIN_STACK_WORDS      (50u)
 #define XRT_STACK_ALIGNMENT_IN_BYTE     (8u)    /* AAPCS / exception frame requirement */
 
 static uint8_t next_thread_id = 0; // start from idle
-
-static void xrt_thread_stack_frame_init(TCB_t* node);
 
 bool xrt_thread_create(TCB_t*     tcb,
                        cdll_node* tcb_node,
@@ -72,7 +71,7 @@ bool xrt_thread_create(TCB_t*     tcb,
     	return false;
     }
 
-    xrt_thread_stack_frame_init(tcb);
+    xrt_port_init_stack_frame(tcb);
 
     if(!xrt_kernel_push_thread_by_priority(&xrt_kernel_ready_list, tcb)){
         tcb -> currently_located_list = NULL;
@@ -100,30 +99,4 @@ void xrt_thread_delay(uint32_t tick){
 void xrt_thread_delay_from_svc(uint32_t arg, TCB_t* running_thread){
 	running_thread -> wake_tick = arg;
 	xrt_kernel_block_thread(running_thread, &xrt_kernel_stopped_list, XRT_THREAD_OS_DELAY);
-}
-
-static void xrt_thread_stack_frame_init(TCB_t* node){
-    uint32_t* sp = node->thread_sp;
-
-    // HW Stack Frame
-    *(--sp) = 0x01000000;            // xPSR
-    *(--sp) = (uint32_t)node->fptr;  // PC (Thread running function)
-	*(--sp) = (uint32_t)node->fptr;  // LR
-    *(--sp) = 0;                     // R12
-    *(--sp) = 0;                     // R3
-    *(--sp) = 0;                     // R2
-    *(--sp) = 0;                     // R1
-    *(--sp) = 0;                     // R0
-
-    // SW Stack Frame
-    *(--sp) = 0;                     // R4
-    *(--sp) = 0;                     // R5
-    *(--sp) = 0;                     // R6
-    *(--sp) = 0;                     // R7
-    *(--sp) = 0;                     // R8
-    *(--sp) = 0;                     // R9
-    *(--sp) = 0;                     // R10
-    *(--sp) = 0;                     // R11
-
-    node -> thread_sp = sp;          // tcb stack pointer must show the sw sp base.
 }

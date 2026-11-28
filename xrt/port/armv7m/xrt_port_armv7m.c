@@ -208,3 +208,29 @@ void xrt_port_set_os_priority_order(void){
     NVIC_SetPriority(PendSV_IRQn, XRT_PORT_PENDSV_PRIORITY);
     NVIC_SetPriority(SysTick_IRQn, XRT_PORT_SYSTICK_PRIORITY);
 }
+
+void xrt_port_init_stack_frame(TCB_t* node){
+    uint32_t* sp = node->thread_sp;
+
+    // HW Stack Frame
+    *(--sp) = 0x01000000;            // xPSR
+    *(--sp) = (uint32_t)node->fptr;  // PC (Thread running function)
+	*(--sp) = (uint32_t)node->fptr;  // LR
+    *(--sp) = 0;                     // R12
+    *(--sp) = 0;                     // R3
+    *(--sp) = 0;                     // R2
+    *(--sp) = 0;                     // R1
+    *(--sp) = 0;                     // R0
+
+    // SW Stack Frame
+    *(--sp) = 0;                     // R4
+    *(--sp) = 0;                     // R5
+    *(--sp) = 0;                     // R6
+    *(--sp) = 0;                     // R7
+    *(--sp) = 0;                     // R8
+    *(--sp) = 0;                     // R9
+    *(--sp) = 0;                     // R10
+    *(--sp) = 0;                     // R11
+
+    node -> thread_sp = sp;          // tcb stack pointer must show the sw sp base.
+}
