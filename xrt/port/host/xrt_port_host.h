@@ -15,7 +15,7 @@
 #ifndef INC_XRT_PORT_HOST_H_
 #define INC_XRT_PORT_HOST_H_
 #include <stdint.h>
-
+#include "xrt_thread.h"
 /*
  * The host has no syscall mechanism: there is no exception to raise and no
  * handler mode to switch into. The wrappers expand to nothing rather than
@@ -44,5 +44,7 @@ void xrt_port_exit_critical(uint32_t old);
 
 /** @brief Counts the request; no switch is performed. */
 void xrt_port_request_context_switch(void);
+
+void xrt_port_init_stack_frame(TCB_t* node);
 
 #endif /* INC_XRT_PORT_HOST_H_ */
