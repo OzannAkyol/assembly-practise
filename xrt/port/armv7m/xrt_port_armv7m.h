@@ -1,5 +1,5 @@
 /**
- * @file    xrt_port_cm4.h
+ * @file    xrt_port_armv7m.h
  * @brief   Cortex-M4 port: the interface the kernel expects from an
  *          architecture.
  *
@@ -10,8 +10,8 @@
  *
  */
 
-#ifndef INC_XRT_PORT_CM4_H_
-#define INC_XRT_PORT_CM4_H_
+#ifndef INC_XRT_PORT_ARMV7M_H_
+#define INC_XRT_PORT_ARMV7M_H_
 #include <stdint.h>
 
 #ifndef XRT_PORT_DEVICE_HEADER
@@ -36,14 +36,15 @@ _Static_assert(XRT_PORT_PRIO_BITS == __NVIC_PRIO_BITS,
  * @brief Saves the callee-saved registers of the outgoing thread.
  *
  */
-__attribute__((naked))void xrt_thread_store_context(void);
+// r0 holds exc_return value,
+__attribute__((naked))void xrt_thread_store_context(uint32_t arg);
 
 /**
  * @brief Restores the callee-saved registers of the incoming thread and
  *        points PSP at its hardware frame.
  *
  */
-__attribute__((naked))void xrt_load_context(void);
+__attribute__((naked))uint32_t xrt_load_context(void);
 
 /**
  * @brief Sets the priorities of the exceptions the kernel owns.
@@ -100,4 +101,4 @@ __STATIC_FORCEINLINE void xrt_port_request_context_switch(void){
                       :                                         \
                       : [svc_num] "I" (svc_number)              \
                       : "memory")
-#endif /* INC_XRT_PORT_CM4_H */
+#endif /* INC_XRT_PORT_ARMV7M_H_ */

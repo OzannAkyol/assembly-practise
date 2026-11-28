@@ -38,7 +38,7 @@ target_compile_definitions(xrt_device INTERFACE
     XRT_PORT_DEVICE_HEADER="stm32f4xx.h"
 )
 
-set(XRT_PORT "cm4" CACHE STRING "")
+set(XRT_PORT "armv7m" CACHE STRING "")
 add_subdirectory(../../xrt xrt)
 
 target_link_libraries(stm32f407 PRIVATE xrt_device xrt)

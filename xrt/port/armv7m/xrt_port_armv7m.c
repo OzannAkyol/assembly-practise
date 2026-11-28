@@ -1,11 +1,11 @@
 /*
- * xrt_port_cm4.c
+ * xrt_port_armv7m.c
  *
  *  Created on: Sep 2, 2026
  *      Author: ozi
  */
 #include <stddef.h>
-#include "xrt_port_cm4.h"
+#include "xrt_port_armv7m.h"
 #include "xrt_system_calls.h"
 #include "xrt_thread.h"
 
@@ -14,9 +14,9 @@
 #define THUMB_INSTRUCTION_SIZE_IN_BYTE  (2u)
 
 _Static_assert(offsetof(TCB_t, thread_sp) == 4u,
-               "xrt_port_cm4.c reads thread_sp at TCB offset 4; the field moved");
+               "xrt_port_armv7m.c reads thread_sp at TCB offset 4; the field moved");
 _Static_assert(offsetof(TCB_t, EXC_RET_VAL) == 48u,
-               "xrt_port_cm4.c reads exc_return at TCB offset 48; the field moved");
+               "xrt_port_armv7m.c reads exc_return at TCB offset 48; the field moved");
 
 __attribute__((naked))void xrt_thread_store_context(uint32_t arg){
 	__asm("mrs r3,  PSP;");
