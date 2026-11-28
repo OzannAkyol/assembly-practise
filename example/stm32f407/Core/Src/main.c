@@ -3,7 +3,6 @@
 
 #include "xrt_kernel.h"
 #include "xrt_app.h"
-#include "xrt_semaphore.h"
 
 void SystemClock_Config(void);
 void MX_USB_HOST_Process(void);
