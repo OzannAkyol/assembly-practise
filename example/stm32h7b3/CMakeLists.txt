@@ -1,4 +1,9 @@
 cmake_minimum_required(VERSION 3.21)
+
+if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+    set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/cortex-m7.cmake)
+endif()
+
 project(xrt_stm32h7b3 LANGUAGES C ASM)
 
 set(CMAKE_C_STANDARD 11)
