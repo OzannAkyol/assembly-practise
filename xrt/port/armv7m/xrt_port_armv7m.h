@@ -37,14 +37,14 @@ _Static_assert(XRT_PORT_PRIO_BITS == __NVIC_PRIO_BITS,
  *
  */
 // r0 holds exc_return value,
-__attribute__((naked))void xrt_thread_store_context(uint32_t arg);
+__attribute__((naked))void xrt_port_store_context(uint32_t arg);
 
 /**
  * @brief Restores the callee-saved registers of the incoming thread and
  *        points PSP at its hardware frame.
  *
  */
-__attribute__((naked))uint32_t xrt_load_context(void);
+__attribute__((naked))uint32_t xrt_port_load_context(void);
 
 /**
  * @brief Sets the priorities of the exceptions the kernel owns.

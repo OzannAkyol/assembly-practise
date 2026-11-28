@@ -18,7 +18,7 @@ _Static_assert(offsetof(TCB_t, thread_sp) == 4u,
 _Static_assert(offsetof(TCB_t, EXC_RET_VAL) == 48u,
                "xrt_port_armv7m.c reads exc_return at TCB offset 48; the field moved");
 
-__attribute__((naked))void xrt_thread_store_context(uint32_t arg){
+__attribute__((naked))void xrt_port_store_context(uint32_t arg){
 	__asm("mrs r3,  PSP;");
 
 	__asm("ldr r1, =xrt_kernel_running_list");
@@ -78,7 +78,7 @@ __attribute__((naked))void xrt_thread_store_context(uint32_t arg){
 	__asm("bx lr;");
 }
 
-__attribute__((naked))uint32_t xrt_load_context(void){
+__attribute__((naked))uint32_t xrt_port_load_context(void){
 	__asm("ldr r2, =xrt_kernel_running_list");
 	__asm("ldr r2, [r2, #0]"); // load the address value of head node's
 	__asm("ldr r2, [r2, #0]");  // take the node's tcb address.
@@ -171,9 +171,9 @@ __attribute__((naked)) void PendSV_Handler(void)
     /* ──────── else branch ──────── */
     __asm("else_branch:");
     __asm("mov r0, lr");
-    __asm("bl xrt_thread_store_context");
+    __asm("bl xrt_port_store_context");
     __asm("bl xrt_kernel_schedule");
-    __asm("bl xrt_load_context");
+    __asm("bl xrt_port_load_context");
     __asm("mov r2, r0");
 
     __asm("mov r1, #0");
